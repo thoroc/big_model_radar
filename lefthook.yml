@@ -1,0 +1,32 @@
+glob_matcher: doublestar
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "src/**/*.ts"
+      run: pnpm format
+      stage_fixed: true
+    - name: typecheck
+      glob: "src/**/*.ts"
+      run: pnpm typecheck
+    - name: lint
+      glob: "src/**/*.ts"
+      run: pnpm lint:fix
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: typecheck
+      glob: "src/**/*.ts"
+      run: pnpm typecheck
+    - name: typecheck-mcp
+      glob: "mcp/**/*.ts"
+      run: cd mcp && pnpm typecheck
+    - name: format
+      glob: "src/**/*.ts"
+      run: pnpm format:check
+    - name: lint
+      glob: "src/**/*.ts"
+      run: pnpm lint
