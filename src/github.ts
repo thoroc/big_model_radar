@@ -190,16 +190,13 @@ export async function createGitHubIssue(title: string, body: string, label: stri
     body = body.slice(0, GITHUB_ISSUE_BODY_LIMIT - TRUNCATION_NOTICE.length) + TRUNCATION_NOTICE;
   }
   const LABEL_COLORS: Record<string, string> = {
+    digest: "1d76db",
     openclaw: "e11d48",
+    web: "6366f1",
     trending: "f9a825",
     hn: "ff6600",
     weekly: "7c3aed",
     monthly: "0d9488",
-    "digest-en": "1d76db",
-    "openclaw-en": "f472b6",
-    "web-en": "6366f1",
-    "trending-en": "fbbf24",
-    "hn-en": "fb923c",
   };
   await ensureLabel(label, LABEL_COLORS[label] ?? "0075ca");
   const resp = await fetch(`https://api.github.com/repos/${digestRepo}/issues`, {

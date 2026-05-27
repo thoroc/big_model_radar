@@ -29,17 +29,7 @@ function resolvePagesUrl(): string {
 
 const PAGES_URL = resolvePagesUrl();
 
-const ZH_LABELS: Record<string, string> = {
-  "ai-cli": "AI CLI 工具",
-  "ai-agents": "AI Agents 生态",
-  "ai-web": "官网动态",
-  "ai-trending": "GitHub 趋势",
-  "ai-hn": "HN 社区动态",
-  "ai-weekly": "AI 工具生态周报",
-  "ai-monthly": "AI 工具生态月报",
-};
-
-const EN_LABELS: Record<string, string> = {
+const LABELS: Record<string, string> = {
   "ai-cli": "AI CLI Tools",
   "ai-agents": "AI Agents Ecosystem",
   "ai-web": "Official Updates",
@@ -68,31 +58,21 @@ async function sendTelegram(text: string): Promise<void> {
 }
 
 function buildMessage(date: string, reports: string[]): string {
-  const baseReports = reports.filter((r) => !r.endsWith("-en"));
-  const isWeekly = baseReports.includes("ai-weekly");
-  const isMonthly = baseReports.includes("ai-monthly");
+  const isWeekly = reports.includes("ai-weekly");
+  const isMonthly = reports.includes("ai-monthly");
 
   const icon = isMonthly ? "📆" : isWeekly ? "📅" : "📡";
-  const suffix = isMonthly ? " 月报" : isWeekly ? " 周报" : "";
-  const lines: string[] = [`${icon} <b>Big Model Radar${suffix} · ${date}</b>\n`];
+  const lines: string[] = [`${icon} <b>Big Model Radar · ${date}</b>\n`];
 
-  // Daily reports first, then rollups
   const ordered = [
-    ...baseReports.filter((r) => !r.includes("weekly") && !r.includes("monthly")),
-    ...baseReports.filter((r) => r.includes("weekly") || r.includes("monthly")),
+    ...reports.filter((r) => !r.includes("weekly") && !r.includes("monthly")),
+    ...reports.filter((r) => r.includes("weekly") || r.includes("monthly")),
   ];
 
   for (const r of ordered) {
-    const zhLabel = ZH_LABELS[r] ?? r;
-    const zhUrl = `${PAGES_URL}/#${date}/${r}`;
-    const enKey = `${r}-en`;
-    if (reports.includes(enKey)) {
-      const enLabel = EN_LABELS[r] ?? "EN";
-      const enUrl = `${PAGES_URL}/#${date}/${enKey}`;
-      lines.push(`• <a href="${zhUrl}">${zhLabel}</a>  ·  <a href="${enUrl}">${enLabel}</a>`);
-    } else {
-      lines.push(`• <a href="${zhUrl}">${zhLabel}</a>`);
-    }
+    const label = LABELS[r] ?? r;
+    const url = `${PAGES_URL}/#${date}/${r}`;
+    lines.push(`• <a href="${url}">${label}</a>`);
   }
 
   lines.push(`\n<a href="${PAGES_URL}">🌐 Web UI</a>  ·  <a href="${PAGES_URL}/feed.xml">⊕ RSS</a>`);

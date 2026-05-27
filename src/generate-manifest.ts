@@ -7,37 +7,23 @@ const FEED_PATH = "feed.xml";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const REPORT_FILES = [
   "ai-cli",
-  "ai-cli-en",
   "ai-agents",
-  "ai-agents-en",
   "ai-web",
-  "ai-web-en",
   "ai-trending",
-  "ai-trending-en",
   "ai-hn",
-  "ai-hn-en",
   "ai-weekly",
-  "ai-weekly-en",
   "ai-monthly",
-  "ai-monthly-en",
 ] as const;
 const MAX_FEED_ITEMS = 30;
 
 const REPORT_LABELS: Record<string, string> = {
-  "ai-cli": "AI CLI 工具社区动态日报",
-  "ai-cli-en": "AI CLI Tools Digest",
-  "ai-agents": "AI Agents 生态日报",
-  "ai-agents-en": "AI Agents Ecosystem Digest",
-  "ai-web": "AI 官方内容追踪报告",
-  "ai-web-en": "Official AI Content Report",
-  "ai-trending": "AI 开源趋势日报",
-  "ai-trending-en": "AI Open Source Trends",
-  "ai-hn": "Hacker News AI 社区动态日报",
-  "ai-hn-en": "Hacker News AI Community Digest",
-  "ai-weekly": "AI 工具生态周报",
-  "ai-weekly-en": "AI Tools Weekly Digest",
-  "ai-monthly": "AI 工具生态月报",
-  "ai-monthly-en": "AI Tools Monthly Digest",
+  "ai-cli": "AI CLI Tools Digest",
+  "ai-agents": "AI Agents Ecosystem Digest",
+  "ai-web": "Official AI Content Report",
+  "ai-trending": "AI Open Source Trends",
+  "ai-hn": "Hacker News AI Community Digest",
+  "ai-weekly": "AI Tools Weekly Digest",
+  "ai-monthly": "AI Tools Monthly Digest",
 };
 
 interface DateEntry {
@@ -136,8 +122,8 @@ const feedXml =
   `  <channel>\n` +
   `    <title>Big Model Radar</title>\n` +
   `    <link>${SITE_URL}</link>\n` +
-  `    <description>AI 开源生态每日简报 · Daily AI ecosystem digest</description>\n` +
-  `    <language>zh-CN</language>\n` +
+  `    <description>Daily AI ecosystem digest</description>\n` +
+  `    <language>en</language>\n` +
   `    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>\n` +
   `    <lastBuildDate>${buildDate}</lastBuildDate>\n` +
   itemsXml +

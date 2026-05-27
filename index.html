@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -251,7 +251,7 @@
       </div>
       <div class="side-label">REPORTS</div>
       <div class="search-wrap">
-        <input id="searchInput" type="search" placeholder="搜索全文，如 Claude">
+        <input id="searchInput" type="search" placeholder="Search full text...">
         <div id="searchStatus"></div>
       </div>
       <div id="nav"></div>
@@ -284,16 +284,11 @@ function renderMarkdown(raw) {
 }
 
 const LABELS = {
-  'ai-cli':          'AI CLI 工具',
-  'ai-cli-en':       'AI CLI Tools',
-  'ai-agents':       'AI Agents 生态',
-  'ai-agents-en':    'AI Agents Ecosystem',
-  'ai-web':          'OpenAI & Anthropic 官网动态',
-  'ai-web-en':       'OpenAI & Anthropic Updates',
-  'ai-trending':     'GitHub AI 趋势',
-  'ai-trending-en':  'GitHub AI Trends',
-  'ai-hn':           'HN 社区动态',
-  'ai-hn-en':        'HN Community Digest',
+  'ai-cli':          'AI CLI Tools',
+  'ai-agents':       'AI Agents Ecosystem',
+  'ai-web':          'OpenAI & Anthropic Updates',
+  'ai-trending':     'GitHub AI Trends',
+  'ai-hn':           'HN Community Digest',
 };
 
 // ── Theme ──
@@ -352,9 +347,9 @@ function applyDateSearch(query) {
   if (!needle) {
     setSearchStatus('');
   } else if (!searchReady) {
-    setSearchStatus('正在建立索引…');
+    setSearchStatus('Building index…');
   } else {
-    setSearchStatus(`匹配 ${hits} 天`);
+    setSearchStatus(`Matched ${hits} days`);
   }
 }
 
@@ -381,7 +376,7 @@ async function buildSearchIndex(dates) {
 
 function initSearch(dates) {
   searchReady = false;
-  setSearchStatus('索引准备中…');
+    setSearchStatus('Building index…');
 
   buildSearchIndex(dates).then((index) => {
     searchIndex = index;
@@ -424,7 +419,7 @@ async function loadReport(date, report, push = true) {
   document.getElementById('sidebar').classList.remove('open');
 
   const cwrap = document.getElementById('cwrap');
-  setContent('<div class="msg"><div class="msg-icon">⏳</div><div>Loading…</div></div>');
+      setContent('<div class="msg"><div class="msg-icon">⏳</div><div>Loading...</div></div>');
   cwrap.scrollTop = 0;
 
   try {
@@ -434,7 +429,7 @@ async function loadReport(date, report, push = true) {
     const safe = renderMarkdown(raw);
     setContent(`<div class="md fade">${safe}</div>`);
   } catch (e) {
-    setContent(`<div class="msg"><div class="msg-icon">⚠️</div><div>加载失败：${e.message}</div></div>`);
+    setContent(`<div class="msg"><div class="msg-icon">⚠️</div><div>Load failed: ${e.message}</div></div>`);
   }
 }
 
@@ -458,50 +453,13 @@ function buildNav(dates) {
     const list = document.createElement('div');
     list.className = 'rpt-list';
 
-    // Filter out -en reports from base list, process as pairs
-    const baseReports = reports.filter(r => !r.endsWith('-en'));
-    baseReports.forEach(r => {
-      const enKey = r + '-en';
-      const hasEn = reports.includes(enKey);
-
-      if (hasEn) {
-        // Render as a row with label + [ZH][EN] buttons
-        const row = document.createElement('div');
-        row.className = 'rpt-row';
-
-        const label = document.createElement('span');
-        label.className = 'rpt-label';
-        const baseLabel = LABELS[r] || r;
-        label.textContent = baseLabel;
-        label.title = baseLabel;
-
-        const btns = document.createElement('div');
-        btns.className = 'lang-btns';
-
-        const zhBtn = document.createElement('button');
-        zhBtn.className = 'lang-btn';
-        zhBtn.dataset.key = `${date}/${r}`;
-        zhBtn.textContent = 'ZH';
-        zhBtn.onclick = () => loadReport(date, r);
-
-        const enBtn = document.createElement('button');
-        enBtn.className = 'lang-btn';
-        enBtn.dataset.key = `${date}/${enKey}`;
-        enBtn.textContent = 'EN';
-        enBtn.onclick = () => loadReport(date, enKey);
-
-        btns.append(zhBtn, enBtn);
-        row.append(label, btns);
-        list.appendChild(row);
-      } else {
-        // No EN variant — render as current single button
-        const btn = document.createElement('button');
-        btn.className = 'rpt-btn';
-        btn.dataset.key = `${date}/${r}`;
-        btn.textContent = LABELS[r] || r;
-        btn.onclick = () => loadReport(date, r);
-        list.appendChild(btn);
-      }
+    reports.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'rpt-btn';
+      btn.dataset.key = `${date}/${r}`;
+      btn.textContent = LABELS[r] || r;
+      btn.onclick = () => loadReport(date, r);
+      list.appendChild(btn);
     });
 
     grp.append(hdr, list);
@@ -537,7 +495,7 @@ window.addEventListener('popstate', () => {
   } catch (e) {
     document.getElementById('nav').innerHTML =
       '<div class="msg" style="height:80px;font-size:10px">⚠️ ' + e.message + '</div>';
-    setContent('<div class="msg"><div class="msg-icon">📡</div><div>无法加载 manifest.json</div></div>');
+    setContent('<div class="msg"><div class="msg-icon">📡</div><div>Could not load manifest.json</div></div>');
   }
 })();
 </script>
