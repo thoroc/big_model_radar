@@ -58,29 +58,7 @@ const DEFAULT_OPENCLAW: RepoConfig = {
   paginated: true,
 };
 
-export const DEFAULT_LANGUAGES: string[] = [
-  "en",
-  "zh",
-  "ja",
-  "ko",
-  "es",
-  "pt",
-  "fr",
-  "de",
-  "it",
-  "pl",
-  "ru",
-  "ar",
-  "tr",
-  "vi",
-  "th",
-  "nl",
-  "hi",
-  "ro",
-  "id",
-  "uk",
-  "bn",
-];
+export const DEFAULT_LANGUAGES: string[] = ["en", "zh"];
 
 const DEFAULT_OPENCLAW_PEERS: RepoConfig[] = [
   { id: "nanobot", repo: "HKUDS/nanobot", name: "NanoBot", paginated: true },
