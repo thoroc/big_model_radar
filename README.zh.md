@@ -1,14 +1,18 @@
 # Big Model Radar
 
+**支持语言**
+
+🇬🇧 English · 🇨🇳 中文 · 🇯🇵 日本語 · 🇰🇷 한국어 · 🇪🇸 Español · 🇧🇷 Português · 🇫🇷 Français · 🇩🇪 Deutsch · 🇮🇹 Italiano · 🇵🇱 Polski · 🇷🇺 Русский · 🇸🇦 العربية · 🇹🇷 Türkçe · 🇻🇳 Tiếng Việt · 🇹🇭 ไทย · 🇳🇱 Nederlands · 🇮🇳 हिन्दी · 🇷🇴 Română · 🇮🇩 Bahasa Indonesia · 🇺🇦 Українська · 🇧🇩 বাংলা
+
 [English](./README.md) | 中文
 
-每天早上 08:00 CST 自动运行的 GitHub Actions 工作流。追踪主流 AI CLI 工具的 GitHub 动态、OpenClaw 及其同赛道项目的生态活动、Anthropic 和 OpenAI 官网最新资讯，并每日监测 GitHub AI 热门仓库趋势，以中英双语每日简报的形式发布为 GitHub Issues 并提交为 Markdown 文件。每周和每月自动生成汇总报告。
+每天早上 08:00 CST 自动运行的 GitHub Actions 工作流。追踪主流 AI CLI 工具的 GitHub 动态、OpenClaw 及其同赛道项目的生态活动、Anthropic 和 OpenAI 官网最新资讯，并每日监测 GitHub AI 热门仓库趋势。每日简报以所有配置语言版本发布为 GitHub Issues 并提交为 Markdown 文件。每周和每月自动生成汇总报告。
 
 ## Web UI
 
 **[https://gsscsd.github.io/big_model_radar](https://gsscsd.github.io/big_model_radar)**
 
-在线浏览所有历史简报，深色主题，无需登录。报告直接由本仓库的 Markdown 文件通过 GitHub Pages 渲染。每份报告支持中文 / 英文切换。
+在线浏览所有历史简报，深色主题，无需登录。报告直接由本仓库的 Markdown 文件通过 GitHub Pages 渲染。每份报告支持已配置的所有语言切换。
 
 ## RSS 订阅
 
@@ -84,7 +88,7 @@ wrangler deploy
 
 **[t.me/agents_radar](https://t.me/agents_radar)**
 
-订阅 Telegram 频道，每日简报生成后自动推送通知，附带所有报告的直达链接（中文 / 英文）。
+订阅 Telegram 频道，每日简报生成后自动推送通知，附带所有报告的直达链接（所有配置语言）。
 
 ## 追踪来源
 
@@ -162,6 +166,7 @@ LLM 负责过滤非 AI 项目，将结果按维度分类（AI 基础工具 / AI 
 - 以 GitHub Issues 形式发布报告，同时提交 Markdown 文件至 `digests/YYYY-MM-DD/`
 - 每日通过 GitHub Actions 定时运行，支持手动触发
 - 所有追踪仓库均可通过 `config.yml` 配置，无需修改代码
+- 集中化本地化系统：通过 `locales/*.json` 管理，支持 21 种语言，`src/strings.ts` 提供 `t()` 翻译目录
 
 ## 部署配置
 
@@ -184,6 +189,7 @@ openclaw_peers:
     repo: owner/my-agent
     name: My Agent
 ```
+> `config.yml` 顶部的 `languages` 字段控制启用的语言。默认值为 `["en", "zh"]`。完整的 21 种支持语言见本页顶部。
 
 ### 3. 添加 Secrets
 
@@ -194,7 +200,6 @@ openclaw_peers:
 | `OPENAI_API_KEY` | ✅ | 任意 OpenAI 兼容接口的 API 密钥 |
 | `OPENAI_BASE_URL` | 可选 | API 地址覆盖。使用 OpenAI 默认接口可留空，或设置兼容服务地址，如 `https://api.openai.com/v1` |
 | `OPENAI_MODEL` | 可选 | 传给 `chat/completions` 的模型名，例如 `gpt-4.1-mini` |
-| `REPORT_LANGS` | 可选 | 报告语言，例如 `zh` 或 `zh,en`（默认：`zh`） |
 | `PAGES_URL` | 建议配置 | 站点公开地址，例如 `https://your-user.github.io/big_model_radar`。建议放在仓库 Variables 中 |
 | `TELEGRAM_BOT_TOKEN` | 可选 | Telegram bot token，从 [@BotFather](https://t.me/BotFather) 获取。设置后每次 digest 完成自动推送通知 |
 | `TELEGRAM_CHAT_ID` | 可选 | 接收通知的 Telegram 频道 / 群组 / 用户 ID。启用 Telegram 推送时必须配置 |
@@ -202,6 +207,8 @@ openclaw_peers:
 > `GITHUB_TOKEN` 由 GitHub Actions 自动提供，无需手动添加。
 >
 > 向后兼容：`ANTHROPIC_API_KEY`、`ANTHROPIC_BASE_URL`、`ANTHROPIC_MODEL` 仍可作为别名使用，但新的配置建议统一改用 `OPENAI_*`。
+>
+> 语言配置可通过 `config.yml` 的 `languages` 字段或环境变量 `REPORT_LANGS` 设置（如 `zh` 或 `zh,en`）。
 
 **配置 Telegram 推送**（可选）：
 1. 向 [@BotFather](https://t.me/BotFather) 创建 bot，复制 token
@@ -230,25 +237,36 @@ export GITHUB_TOKEN=ghp_xxxxx
 export OPENAI_BASE_URL=https://api.openai.com/v1
 export OPENAI_API_KEY=sk-xxxxxxxx
 export OPENAI_MODEL=gpt-4.1-mini
-export REPORT_LANGS=zh
 export DIGEST_REPO=your-username/big_model_radar  # 可选，留空则仅写入本地文件
 
 pnpm start
 ```
 
+## 运行测试
+
+```bash
+pnpm test        # 运行所有测试（vitest）
+pnpm test:watch  # 开发模式下持续运行测试
+```
+
 ## 输出格式
 
-文件写入 `digests/YYYY-MM-DD/`：
+文件写入 `digests/YYYY-MM-DD/`。每种报告类型按启用语言分别生成：
 
-| 文件 | 内容 | GitHub Issue 标签 |
-|------|------|------------------|
-| `ai-cli.md` | CLI 简报 — 跨工具横向对比 + 各工具详细报告 | `digest` |
-| `ai-agents.md` | OpenClaw 深度报告 + 横向生态对比 + 10 个同赛道项目详情 | `openclaw` |
-| `ai-web.md` | 官网内容报告（仅在有新内容时生成） | `web` |
-| `ai-trending.md` | GitHub AI 趋势热榜 — 按维度分类 + 趋势信号分析（仅在有数据时生成） | `trending` |
-| `ai-hn.md` | Hacker News AI 社区动态 — 热门帖子分类 + 情绪分析（仅在抓取成功时生成） | `hn` |
+| 文件模式 | 内容 | GitHub Issue 标签 |
+|----------|------|------------------|
+| `ai-cli{locale}.md` | CLI 简报 — 跨工具横向对比 + 各工具详细报告 | `digest{locale}` |
+| `ai-agents{locale}.md` | OpenClaw 深度报告 + 横向生态对比 + 10 个同赛道项目详情 | `openclaw{locale}` |
+| `ai-web{locale}.md` | 官网内容报告（仅在有新内容时生成） | `web{locale}` |
+| `ai-trending{locale}.md` | GitHub AI 趋势热榜 — 按维度分类 + 趋势信号分析（仅在有数据时生成） | `trending{locale}` |
+| `ai-hn{locale}.md` | Hacker News AI 社区动态 — 热门帖子分类 + 情绪分析（仅在抓取成功时生成） | `hn{locale}` |
 
-`digests/web-state.json` 用于记录已处理的 URL，随每日简报一并提交。
+其中 `{locale}` 对英语为空（如 `ai-cli.md`），对其他语言为 `-{code}`（如 `ai-cli-zh.md`、`ai-cli-ja.md`）。GitHub Issue 标签采用相同后缀（如 `digest`、`digest-zh`、`digest-ja`）。
+
+例如，启用全部 21 种语言时，`digests/2026-05-28/` 将包含：
+- `ai-cli.md`（英文）、`ai-cli-zh.md`（中文）、`ai-cli-ja.md`（日文）、`ai-cli-es.md`（西班牙文）……
+
+状态记录文件 `digests/web-state.json` 用于记录已处理的 URL，随每日简报一并提交。
 
 ---
 
@@ -264,6 +282,7 @@ pnpm start
                              今日速览 / 热点 Issues / PR 进展 / 趋势
   <details> OpenAI Codex   — 今日速览 / 热点 Issues / PR 进展 / 趋势
   <details> Gemini CLI     — ...
+  <details> GitHub Copilot CLI — ...
   <details> Kimi Code CLI  — ...
   <details> OpenCode       — ...
   <details> Qwen Code      — ...
@@ -335,19 +354,39 @@ OpenAI 内容精选            (research / release / company / safety / ...)
 值得深读
 ```
 
-历史简报存储在 [`digests/`](./digests/)。已发布的 Issues 按类型打标签：[`digest`](../../issues?label=digest) · [`openclaw`](../../issues?label=openclaw) · [`web`](../../issues?label=web) · [`trending`](../../issues?label=trending) · [`hn`](../../issues?label=hn)。
+`ai-weekly.md` 结构（每周一生成）：
+```
+覆盖时间: YYYY-MM-DD ~ YYYY-MM-DD  （近 7 天每日简报）
+
+本周亮点
+关键趋势与进展
+值得关注的发布
+社区活跃度
+展望
+```
+
+`ai-monthly.md` 结构（每月 1 日生成）：
+```
+数据来源: N 份周报（若周报不足 2 份则抽选每日简报）
+
+本月回顾
+主要主题
+生态变化
+热门项目与发布
+未来展望
+```
+
+历史简报存储在 [`digests/`](./digests/)。已发布的 Issues 按类型打标签：[`digest`](../../issues?label=digest) · [`openclaw`](../../issues?label=openclaw) · [`web`](../../issues?label=web) · [`trending`](../../issues?label=trending) · [`hn`](../../issues?label=hn) · [`weekly`](../../issues?label=weekly) · [`monthly`](../../issues?label=monthly)。非英文报告使用带语言后缀的标签（如 `digest-zh`、`digest-ja`）。
 
 ## 定时计划
 
-默认 cron 表达式 `"0 0 * * *"` = **00:00 UTC = 08:00 CST**。
+| 工作流 | Cron | UTC | CST |
+|--------|------|-----|-----|
+| 每日简报 | `0 0 * * *` | 00:00 每日 | 08:00 每日 |
+| 每周汇总 | `0 1 * * 1` | 01:00 每周一 | 09:00 每周一 |
+| 每月汇总 | `0 2 1 * *` | 02:00 每月 1 日 | 10:00 每月 1 日 |
 
-修改时间请编辑 `.github/workflows/daily-digest.yml` 中的 cron 表达式：
-
-| CST   | UTC cron      |
-|-------|---------------|
-| 08:00 | `0 0 * * *`  |
-| 09:00 | `0 1 * * *`  |
-| 10:00 | `0 2 * * *`  |
+如需修改时间，请编辑 `.github/workflows/` 下对应工作流文件中的 cron 表达式。
 
 ## Star History
 
