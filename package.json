@@ -2,7 +2,7 @@
   "name": "big-model-radar",
   "version": "1.0.0",
   "type": "module",
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@11.4.0",
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
