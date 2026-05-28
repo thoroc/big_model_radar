@@ -77,15 +77,62 @@ export interface LocaleStrings {
 }
 
 import en from "../locales/en.json";
+import zh from "../locales/zh.json";
+import ja from "../locales/ja.json";
+import ko from "../locales/ko.json";
+import es from "../locales/es.json";
+import pt from "../locales/pt.json";
+import fr from "../locales/fr.json";
+import de from "../locales/de.json";
+import it from "../locales/it.json";
+import pl from "../locales/pl.json";
+import ru from "../locales/ru.json";
+import ar from "../locales/ar.json";
+import tr from "../locales/tr.json";
+import vi from "../locales/vi.json";
+import th from "../locales/th.json";
+import nl from "../locales/nl.json";
 
 export const STRINGS: Record<string, LocaleStrings> = {
   en: en as LocaleStrings,
+  zh: zh as LocaleStrings,
+  ja: ja as LocaleStrings,
+  ko: ko as LocaleStrings,
+  es: es as LocaleStrings,
+  pt: pt as LocaleStrings,
+  fr: fr as LocaleStrings,
+  de: de as LocaleStrings,
+  it: it as LocaleStrings,
+  pl: pl as LocaleStrings,
+  ru: ru as LocaleStrings,
+  ar: ar as LocaleStrings,
+  tr: tr as LocaleStrings,
+  vi: vi as LocaleStrings,
+  th: th as LocaleStrings,
+  nl: nl as LocaleStrings,
 };
 
-export const SUPPORTED_LOCALES = ["en"] as const;
+export const SUPPORTED_LOCALES = [
+  "en",
+  "zh",
+  "ja",
+  "ko",
+  "es",
+  "pt",
+  "fr",
+  "de",
+  "it",
+  "pl",
+  "ru",
+  "ar",
+  "tr",
+  "vi",
+  "th",
+  "nl",
+] as const;
 
 export const validateLocale = (lang: string): string => {
-  if (SUPPORTED_LOCALES.includes(lang as "en")) return lang;
+  if (SUPPORTED_LOCALES.includes(lang as (typeof SUPPORTED_LOCALES)[number])) return lang;
   console.warn(`Unsupported locale "${lang}", falling back to "en"`);
   return "en";
 };

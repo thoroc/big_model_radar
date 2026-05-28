@@ -15,7 +15,7 @@ describe("strings", () => {
   });
 
   it("t(fallback) uses 'en' for unsupported locales", () => {
-    const s = t("fr");
+    const s = t("xx");
     expect(s.noActivity).toBe("No activity in the last 24 hours.");
   });
 
@@ -41,8 +41,8 @@ describe("validateLocale", () => {
   });
 
   it("falls back to 'en' for unsupported locales", () => {
-    expect(validateLocale("fr")).toBe("en");
-    expect(validateLocale("zh")).toBe("en");
+    expect(validateLocale("xx")).toBe("en");
+    expect(validateLocale("yy")).toBe("en");
   });
 });
 

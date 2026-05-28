@@ -8,6 +8,25 @@ import type { TrendingData } from "./trending.ts";
 import type { HnData } from "./hn.ts";
 import { t } from "./strings.ts";
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  zh: "Chinese",
+  ja: "Japanese",
+  ko: "Korean",
+  es: "Spanish",
+  pt: "Portuguese",
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  pl: "Polish",
+  ru: "Russian",
+  ar: "Arabic",
+  tr: "Turkish",
+  vi: "Vietnamese",
+  th: "Thai",
+  nl: "Dutch",
+};
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -67,20 +86,23 @@ export function buildCliPrompt(
   prs: GitHubItem[],
   releases: GitHubRelease[],
   dateStr: string,
+  lang = "en",
 ): string {
   const sampledIssues = topN(issues, CLI_ISSUE_LIMIT);
   const sampledPrs = topN(prs, CLI_PR_LIMIT);
 
-  const issuesText = sampledIssues.map((i) => formatItem(i)).join("\n") || t("en").noneStr;
-  const prsText = sampledPrs.map((p) => formatItem(p)).join("\n") || t("en").noneStr;
+  const issuesText = sampledIssues.map((i) => formatItem(i, lang)).join("\n") || t(lang).noneStr;
+  const prsText = sampledPrs.map((p) => formatItem(p, lang)).join("\n") || t(lang).noneStr;
   const releasesText = releases.length
     ? releases.map((r) => `- ${r.tag_name}: ${r.name}\n  ${(r.body ?? "").slice(0, 300)}`).join("\n")
-    : t("en").noneStr;
+    : t(lang).noneStr;
 
-  const issueNote = sampleNote(issues.length, sampledIssues.length);
-  const prNote = sampleNote(prs.length, sampledPrs.length);
+  const issueNote = sampleNote(issues.length, sampledIssues.length, lang);
+  const prNote = sampleNote(prs.length, sampledPrs.length, lang);
 
   return `You are a technical analyst focused on AI developer tools. Based on the following GitHub data, generate the ${cfg.name} community digest for ${dateStr}.
+
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
 
 # Data source: github.com/${cfg.repo}
 
@@ -95,7 +117,7 @@ ${prsText}
 
 ---
 
-Generate a structured English digest with the following sections:
+Generate a structured ${LANGUAGE_NAMES[lang]} digest with the following sections:
 
 1. **Today's Highlights** - 2-3 sentences summarizing the most important updates
 2. **Releases** - If new versions exist, summarize changes; omit if none
@@ -117,6 +139,7 @@ export function buildPeerPrompt(
   prs: GitHubItem[],
   releases: GitHubRelease[],
   dateStr: string,
+  lang = "en",
   issueLimit = PEER_ISSUE_LIMIT,
   prLimit = PEER_PR_LIMIT,
 ): string {
@@ -126,21 +149,23 @@ export function buildPeerPrompt(
   const sampledIssues = topN(issues, issueLimit);
   const sampledPrs = topN(prs, prLimit);
 
-  const issuesText = sampledIssues.map((i) => formatItem(i)).join("\n") || t("en").noneStr;
-  const prsText = sampledPrs.map((p) => formatItem(p)).join("\n") || t("en").noneStr;
+  const issuesText = sampledIssues.map((i) => formatItem(i, lang)).join("\n") || t(lang).noneStr;
+  const prsText = sampledPrs.map((p) => formatItem(p, lang)).join("\n") || t(lang).noneStr;
   const releasesText = releases.length
     ? releases.map((r) => `- ${r.tag_name}: ${r.name}\n  ${(r.body ?? "").slice(0, 300)}`).join("\n")
-    : t("en").noneStr;
+    : t(lang).noneStr;
 
   const openIssues = issues.filter((i) => i.state === "open").length;
   const closedIssues = issues.filter((i) => i.state === "closed").length;
   const openPrs = prs.filter((p) => p.state === "open").length;
   const mergedPrs = prs.filter((p) => p.state === "closed").length;
 
-  const issueSampleNote = sampleNote(totalIssues, sampledIssues.length);
-  const prSampleNote = sampleNote(totalPrs, sampledPrs.length);
+  const issueSampleNote = sampleNote(totalIssues, sampledIssues.length, lang);
+  const prSampleNote = sampleNote(totalPrs, sampledPrs.length, lang);
 
   return `You are an analyst of AI agent and personal AI assistant open-source projects. Based on the following GitHub data from ${cfg.name} (github.com/${cfg.repo}), generate a project digest for ${dateStr}.
+
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
 
 # Data Overview
 - Issues updated in last 24h: ${totalIssues} (open/active: ${openIssues}, closed: ${closedIssues})
@@ -158,7 +183,7 @@ ${prsText}
 
 ---
 
-Generate a structured English ${cfg.name} project digest with the following sections:
+Generate a structured ${LANGUAGE_NAMES[lang]} ${cfg.name} project digest with the following sections:
 
 1. **Today's Overview** - 3-5 sentences summarizing project status, including activity assessment
 2. **Releases** - If new versions exist, detail changes, breaking changes, migration notes; omit if none
@@ -193,6 +218,8 @@ export function buildPeersComparisonPrompt(
 
   return `You are a senior analyst of the AI agent and personal AI assistant open-source ecosystem. The following are ${dateStr} community digest summaries for each project.
 
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
+
 ${openclawSection}
 
 ---
@@ -201,7 +228,7 @@ ${peerSections}
 
 ---
 
-Generate a cross-project comparison report in English with these sections:
+Generate a cross-project comparison report in ${LANGUAGE_NAMES[lang]} with these sections:
 
 1. **Ecosystem Overview** - 3-5 sentences on the overall personal AI assistant / agent open-source landscape
 2. **Activity Comparison** - Table comparing Issues count, PR count, Release status, and health score for each project
@@ -215,14 +242,21 @@ Style: concise and professional, data-backed, suited for technical decision-make
 `;
 }
 
-export function buildSkillsPrompt(prs: GitHubItem[], issues: GitHubItem[], dateStr: string): string {
+export function buildSkillsPrompt(
+  prs: GitHubItem[],
+  issues: GitHubItem[],
+  dateStr: string,
+  lang = "en",
+): string {
   const topPrs = topN(prs, 20);
   const topIssues = topN(issues, 15);
 
-  const prsText = topPrs.map((p) => formatItem(p)).join("\n") || t("en").noneStr;
-  const issuesText = topIssues.map((i) => formatItem(i)).join("\n") || t("en").noneStr;
+  const prsText = topPrs.map((p) => formatItem(p, lang)).join("\n") || t(lang).noneStr;
+  const issuesText = topIssues.map((i) => formatItem(i, lang)).join("\n") || t(lang).noneStr;
 
   return `You are a technical analyst focused on the Claude Code ecosystem. The following data is from github.com/anthropics/skills (official Claude Code Skills repository). Analyze the community's most-watched Skills activity (data as of ${dateStr}).
+
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
 
 ## Repository Context
 anthropics/skills is the official Claude Code Skills collection. Each PR typically represents a new or improved Skill. The community proposes new Skills and reports issues via Issues; PRs represent actual Skill submissions.
@@ -235,7 +269,7 @@ ${issuesText}
 
 ---
 
-Generate a Claude Code Skills community highlights report in English with these sections:
+Generate a Claude Code Skills community highlights report in ${LANGUAGE_NAMES[lang]} with these sections:
 
 1. **Top Skills Ranking** - List the 5-8 most-discussed Skills (PRs) by comments/attention, describe each Skill's functionality, discussion highlights, and current status (open/merged/draft)
 2. **Community Demand Trends** - From Issues, distill the most-anticipated new Skill directions (e.g. workflow automation, code review, test generation, documentation)
@@ -259,11 +293,13 @@ export function buildComparisonPrompt(digests: RepoDigest[], dateStr: string, la
 
   return `You are a senior technical analyst of the AI developer tools ecosystem. The following are ${dateStr} community digest summaries for each major AI CLI tool:
 
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
+
 ${sections}
 
 ---
 
-Generate a cross-tool comparison report in English with these sections:
+Generate a cross-tool comparison report in ${LANGUAGE_NAMES[lang]} with these sections:
 
 1. **Ecosystem Overview** - 3-5 sentences on the overall AI CLI tools development landscape
 2. **Activity Comparison** - Table comparing Issues count, PR count, Release status for each tool today
@@ -276,7 +312,7 @@ Style: concise and professional, data-backed, suited for technical decision-make
 `;
 }
 
-export function buildTrendingPrompt(data: TrendingData, dateStr: string): string {
+export function buildTrendingPrompt(data: TrendingData, dateStr: string, lang = "en"): string {
   const trendingSection =
     data.trendingFetchSuccess && data.trendingRepos.length > 0
       ? data.trendingRepos
@@ -308,6 +344,8 @@ export function buildTrendingPrompt(data: TrendingData, dateStr: string): string
 
   return `You are a technical analyst focused on the AI open-source ecosystem. The following is ${dateStr} GitHub AI-related trending repository data. Please filter for AI relevance, categorize, and analyze trends.
 
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
+
 ## Data Sources
 - **Trending List** (github.com/trending, today's stars most reliable): Real-time hot list with today's new stars
 - **Topic Search** (GitHub Search API, topic tags): AI-related projects active in last 7 days, grouped by topic
@@ -324,7 +362,7 @@ ${searchSection}
 
 ---
 
-Generate a structured AI Open Source Trends Report in English:
+Generate a structured AI Open Source Trends Report in ${LANGUAGE_NAMES[lang]}:
 
 **Step 1 (Filter)**: From the above data, select projects clearly related to AI/ML (exclude unrelated general tools, frontend frameworks, games, etc.). Skip non-AI trending repos.
 
@@ -351,11 +389,11 @@ Generate a structured AI Open Source Trends Report in English:
 
 4. **Community Hot Spots** — Bullet list of 3-5 specific projects or directions worth developer focus, with brief reasoning
 
-Style: English, professional and concise, must include GitHub links for every project.
+Style: ${LANGUAGE_NAMES[lang]}, professional and concise, must include GitHub links for every project.
 `;
 }
 
-export function buildWebReportPrompt(results: WebFetchResult[], dateStr: string): string {
+export function buildWebReportPrompt(results: WebFetchResult[], dateStr: string, lang = "en"): string {
   const isAnyFirstRun = results.some((r) => r.isFirstRun);
 
   const siteSections = results
@@ -364,19 +402,19 @@ export function buildWebReportPrompt(results: WebFetchResult[], dateStr: string)
         ? `First full crawl (sitemap total ${totalDiscovered} URLs, showing latest ${newItems.length} articles)`
         : `Incremental update, ${newItems.length} new articles today`;
 
-      if (newItems.length === 0) return `## ${siteName}\n\n（${mode}，暂无可供分析的内容。）`;
+      if (newItems.length === 0) return `## ${siteName}\n\n(${mode}, no content to analyze)`;
 
       const itemsText = newItems
         .map((item) =>
           [
             `### [${item.title || item.url}](${item.url})`,
-            `- 分类: ${item.category} | 发布/更新: ${item.lastmod.slice(0, 10) || "未知"}`,
-            `- 内容节选: ${item.content || t("en").unableToExtract}`,
+            `- Category: ${item.category} | Published/Updated: ${item.lastmod.slice(0, 10) || "unknown"}`,
+            `- Excerpt: ${item.content || t(lang).unableToExtract}`,
           ].join("\n"),
         )
         .join("\n\n");
 
-      return `## ${siteName}（${mode}）\n\n${itemsText}`;
+      return `## ${siteName} (${mode})\n\n${itemsText}`;
     })
     .join("\n\n---\n\n");
 
@@ -386,13 +424,15 @@ export function buildWebReportPrompt(results: WebFetchResult[], dateStr: string)
 
   return `You are a deep content analyst focused on AI, skilled at extracting strategic signals from official announcements, technical blogs, research papers, and product documentation.
 
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
+
 The following content was crawled on ${dateStr} from Anthropic (claude.com / anthropic.com) and OpenAI (openai.com). ${firstRunNote}
 
 ${siteSections}
 
 ---
 
-Generate a detailed AI Official Content Tracking Report in English with these sections:
+Generate a detailed AI Official Content Tracking Report in ${LANGUAGE_NAMES[lang]} with these sections:
 
 1. **Today's Highlights** — 3-5 sentences on the most important new releases or developments, calling out key highlights
 
@@ -413,22 +453,28 @@ Generate a detailed AI Official Content Tracking Report in English with these se
    - Dense releases in a category (may signal a product milestone)
    - Policy, compliance, and safety developments
 
-${isAnyFirstRun ? "6. **Content Landscape Overview** — First full crawl only: summarize the content category distribution for both companies and describe their content strategy style (academic-oriented vs product-oriented vs user stories, etc.)\n\n" : ""}Style: English, professional and detailed, suited for AI researchers, product managers, and technical decision-makers. Every item must include official links.
+${isAnyFirstRun ? "6. **Content Landscape Overview** — First full crawl only: summarize the content category distribution for both companies and describe their content strategy style (academic-oriented vs product-oriented vs user stories, etc.)\n\n" : ""}Style: ${LANGUAGE_NAMES[lang]}, professional and detailed, suited for AI researchers, product managers, and technical decision-makers. Every item must include official links.
 `;
 }
 
-export function buildWeeklyPrompt(dailyDigests: Record<string, string>, weekStr: string): string {
+export function buildWeeklyPrompt(
+  dailyDigests: Record<string, string>,
+  weekStr: string,
+  lang = "en",
+): string {
   const digestEntries = Object.entries(dailyDigests)
     .map(([date, content]) => `## ${date}\n\n${content}`)
     .join("\n\n---\n\n");
 
   return `You are a technical analyst focused on the AI open-source ecosystem. The following are daily digest summaries from the past 7 days (${weekStr}) of AI tool community activity. Generate a comprehensive weekly recap.
 
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
+
 ${digestEntries}
 
 ---
 
-Generate an AI Tools Ecosystem Weekly Report with these sections:
+Generate an AI Tools Ecosystem Weekly Report in ${LANGUAGE_NAMES[lang]} with these sections:
 
 1. **Week's Top Stories** - 5-8 most important events, releases, and community developments this week, each with date
 2. **CLI Tools Progress** - Overall activity and key changes for each AI CLI tool (Claude Code, Codex, Gemini CLI, etc.)
@@ -438,22 +484,28 @@ Generate an AI Tools Ecosystem Weekly Report with these sections:
 6. **Official Announcements** - Important content published by Anthropic and OpenAI this week (if any)
 7. **Next Week's Signals** - Based on this week's data, predict trends and upcoming events worth watching
 
-Style: English, concise and professional, helping technical developers quickly grasp the week's developments.
+Style: ${LANGUAGE_NAMES[lang]}, concise and professional, helping technical developers quickly grasp the week's developments.
 `;
 }
 
-export function buildMonthlyPrompt(sourceDigests: Record<string, string>, monthStr: string): string {
+export function buildMonthlyPrompt(
+  sourceDigests: Record<string, string>,
+  monthStr: string,
+  lang = "en",
+): string {
   const digestEntries = Object.entries(sourceDigests)
     .map(([key, content]) => `## ${key}\n\n${content}`)
     .join("\n\n---\n\n");
 
   return `You are a technical analyst focused on the AI open-source ecosystem. The following are ${monthStr} AI tool community digest summaries (${Object.keys(sourceDigests).length} reports total). Generate a comprehensive monthly review.
 
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
+
 ${digestEntries}
 
 ---
 
-Generate an AI Tools Ecosystem Monthly Report with these sections:
+Generate an AI Tools Ecosystem Monthly Report in ${LANGUAGE_NAMES[lang]} with these sections:
 
 1. **Month's Top Stories** - 5-10 most important events and milestones this month, in chronological order
 2. **CLI Tools Monthly Progress** - Overall development trajectory, major releases, and community growth for each key AI CLI tool
@@ -463,22 +515,24 @@ Generate an AI Tools Ecosystem Monthly Report with these sections:
 6. **Official Announcements Review** - Strategic analysis of Anthropic and OpenAI content published this month
 7. **Next Month's Outlook** - Based on this month's trends, predict key directions and potential events to watch
 
-Style: English, in-depth analysis, data-driven, suited for monthly retrospectives and strategic decision-making.
+Style: ${LANGUAGE_NAMES[lang]}, in-depth analysis, data-driven, suited for monthly retrospectives and strategic decision-making.
 `;
 }
 
-export function buildHnPrompt(data: HnData, dateStr: string): string {
+export function buildHnPrompt(data: HnData, dateStr: string, lang = "en"): string {
   const storiesText = data.stories
     .map(
       (s, i) =>
         `${i + 1}. **${s.title}**\n` +
         `   Link: ${s.url}\n` +
         `   Discussion: ${s.hnUrl}\n` +
-        `   Score: ${s.points} | Comments: ${s.comments} | Author: @${s.author} | 时间: ${s.createdAt.slice(0, 16)}`,
+        `   Score: ${s.points} | Comments: ${s.comments} | Author: @${s.author} | Time: ${s.createdAt.slice(0, 16)}`,
     )
     .join("\n\n");
 
   return `You are an AI industry news analyst. The following are AI-related top posts from Hacker News in the past 24 hours as of ${dateStr} (sorted by score, ${data.stories.length} total):
+
+CRITICAL: You must write the entire response in ${LANGUAGE_NAMES[lang]}. All headings, labels, descriptions, and commentary must be in ${LANGUAGE_NAMES[lang]}.
 
 ---
 
@@ -486,7 +540,7 @@ ${storiesText}
 
 ---
 
-Generate a structured Hacker News AI Community Digest in English:
+Generate a structured Hacker News AI Community Digest in ${LANGUAGE_NAMES[lang]}:
 
 1. **Today's Highlights** — 3-5 sentences on the hottest AI discussion topics and community sentiment on HN today
 
@@ -508,6 +562,6 @@ Generate a structured Hacker News AI Community Digest in English:
 
 4. **Worth Deep Reading** — List 2-3 pieces most worth developers/researchers reading in depth, with brief reasoning
 
-Style: English, concise and professional, preserve all original links.
+Style: ${LANGUAGE_NAMES[lang]}, concise and professional, preserve all original links.
 `;
 }
