@@ -75,6 +75,11 @@ export const DEFAULT_LANGUAGES = [
   "vi",
   "th",
   "nl",
+  "hi",
+  "ro",
+  "id",
+  "uk",
+  "bn",
 ];
 
 const DEFAULT_OPENCLAW_PEERS: RepoConfig[] = [

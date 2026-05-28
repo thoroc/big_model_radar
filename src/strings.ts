@@ -92,6 +92,11 @@ import tr from "../locales/tr.json";
 import vi from "../locales/vi.json";
 import th from "../locales/th.json";
 import nl from "../locales/nl.json";
+import hi from "../locales/hi.json";
+import ro from "../locales/ro.json";
+import id from "../locales/id.json";
+import uk from "../locales/uk.json";
+import bn from "../locales/bn.json";
 
 export const STRINGS: Record<string, LocaleStrings> = {
   en: en as LocaleStrings,
@@ -110,6 +115,11 @@ export const STRINGS: Record<string, LocaleStrings> = {
   vi: vi as LocaleStrings,
   th: th as LocaleStrings,
   nl: nl as LocaleStrings,
+  hi: hi as LocaleStrings,
+  ro: ro as LocaleStrings,
+  id: id as LocaleStrings,
+  uk: uk as LocaleStrings,
+  bn: bn as LocaleStrings,
 };
 
 export const SUPPORTED_LOCALES = [
@@ -129,6 +139,11 @@ export const SUPPORTED_LOCALES = [
   "vi",
   "th",
   "nl",
+  "hi",
+  "ro",
+  "id",
+  "uk",
+  "bn",
 ] as const;
 
 export const validateLocale = (lang: string): string => {

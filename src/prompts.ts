@@ -25,6 +25,11 @@ const LANGUAGE_NAMES: Record<string, string> = {
   vi: "Vietnamese",
   th: "Thai",
   nl: "Dutch",
+  hi: "Hindi",
+  ro: "Romanian",
+  id: "Indonesian",
+  uk: "Ukrainian",
+  bn: "Bengali",
 };
 
 // ---------------------------------------------------------------------------
