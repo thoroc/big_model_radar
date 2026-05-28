@@ -14,20 +14,13 @@
 const PAGES_URL = "https://gsscsd.github.io/big_model_radar";
 
 const REPORT_LABELS: Record<string, string> = {
-  "ai-cli": "AI CLI Tools Digest (ZH)",
-  "ai-cli-en": "AI CLI Tools Digest (EN)",
-  "ai-agents": "AI Agents Ecosystem (ZH)",
-  "ai-agents-en": "AI Agents Ecosystem (EN)",
-  "ai-web": "Official AI Content (ZH)",
-  "ai-web-en": "Official AI Content (EN)",
-  "ai-trending": "GitHub AI Trends (ZH)",
-  "ai-trending-en": "GitHub AI Trends (EN)",
-  "ai-hn": "Hacker News AI Community (ZH)",
-  "ai-hn-en": "Hacker News AI Community (EN)",
-  "ai-weekly": "Weekly Rollup (ZH)",
-  "ai-weekly-en": "Weekly Rollup (EN)",
-  "ai-monthly": "Monthly Rollup (ZH)",
-  "ai-monthly-en": "Monthly Rollup (EN)",
+  "ai-cli": "AI CLI Tools Digest",
+  "ai-agents": "AI Agents Ecosystem Digest",
+  "ai-web": "Official AI Content Report",
+  "ai-trending": "AI Open Source Trends",
+  "ai-hn": "Hacker News AI Community Digest",
+  "ai-weekly": "AI Tools Weekly Digest",
+  "ai-monthly": "AI Tools Monthly Digest",
 };
 
 interface ManifestDate {
@@ -85,7 +78,7 @@ async function toolGetReport(args: Record<string, unknown>): Promise<string> {
 }
 
 async function toolGetLatest(args: Record<string, unknown>): Promise<string> {
-  const type = String(args["type"] ?? "ai-cli-en").trim();
+  const type = String(args["type"] ?? "ai-cli").trim();
   const { dates } = await fetchManifest();
   for (const { date, reports } of dates) {
     if (reports.includes(type)) {
@@ -108,9 +101,8 @@ async function toolSearch(args: Record<string, unknown>): Promise<string> {
 
   await Promise.all(
     slice.map(async ({ date, reports }) => {
-      // Skip -en duplicates and rollups to avoid redundant noise
       const targets = reports.filter(
-        (r) => !r.endsWith("-en") && !r.includes("weekly") && !r.includes("monthly"),
+        (r) => !r.includes("weekly") && !r.includes("monthly"),
       );
       await Promise.all(
         targets.map(async (type) => {
@@ -162,7 +154,7 @@ const TOOLS = [
         type: {
           type: "string",
           description:
-            "Report type: ai-cli-en, ai-agents-en, ai-web-en, ai-trending-en, ai-hn-en, ai-weekly-en, ai-monthly-en (drop -en suffix for Chinese versions)",
+            "Report type: ai-cli, ai-agents, ai-web, ai-trending, ai-hn, ai-weekly, ai-monthly",
         },
       },
       required: ["date", "type"],
@@ -176,7 +168,7 @@ const TOOLS = [
       properties: {
         type: {
           type: "string",
-          description: "Report type (default: ai-cli-en). Use list_reports to see all available types.",
+          description: "Report type (default: ai-cli). Use list_reports to see all available types.",
         },
       },
     },

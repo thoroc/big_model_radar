@@ -6,6 +6,7 @@ import type { RepoConfig, GitHubItem, GitHubRelease } from "./github.ts";
 import type { WebFetchResult } from "./web.ts";
 import type { TrendingData } from "./trending.ts";
 import type { HnData } from "./hn.ts";
+import { t } from "./strings.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,16 +24,17 @@ export interface RepoDigest {
 // Formatting
 // ---------------------------------------------------------------------------
 
-export function formatItem(item: GitHubItem): string {
+export function formatItem(item: GitHubItem, lang = "en"): string {
+  const s = t(lang);
   const labels = item.labels.map((l) => l.name).join(", ");
   const labelStr = labels ? ` [${labels}]` : "";
   const body = (item.body ?? "").replace(/\n/g, " ").trim().slice(0, 300);
   const ellipsis = (item.body ?? "").length > 300 ? "..." : "";
   return [
     `#${item.number} [${item.state.toUpperCase()}]${labelStr} ${item.title}`,
-    `  Author: @${item.user.login} | Created: ${item.created_at.slice(0, 10)} | Updated: ${item.updated_at.slice(0, 10)} | Comments: ${item.comments} | 👍: ${item.reactions?.["+1"] ?? 0}`,
-    `  URL: ${item.html_url}`,
-    `  Summary: ${body}${ellipsis}`,
+    `  ${s.formatItemAuthor}: @${item.user.login} | ${s.formatItemCreated}: ${item.created_at.slice(0, 10)} | ${s.formatItemUpdated}: ${item.updated_at.slice(0, 10)} | ${s.formatItemComments}: ${item.comments} | 👍: ${item.reactions?.["+1"] ?? 0}`,
+    `  ${s.formatItemUrl}: ${item.html_url}`,
+    `  ${s.formatItemSummary}: ${body}${ellipsis}`,
   ].join("\n");
 }
 
@@ -44,13 +46,14 @@ const CLI_ISSUE_LIMIT = 30;
 const CLI_PR_LIMIT = 20;
 
 /** Sort by comment count desc, take top N. */
-function topN(items: GitHubItem[], n: number): GitHubItem[] {
+export function topN(items: GitHubItem[], n: number): GitHubItem[] {
   return [...items].sort((a, b) => b.comments - a.comments).slice(0, n);
 }
 
-function sampleNote(total: number, sampled: number): string {
+export function sampleNote(total: number, sampled: number, lang = "en"): string {
+  const s = t(lang);
   return total > sampled
-    ? `(Total: ${total} items; showing top ${sampled} by comment count)`
+    ? s.sampleNote.replace("{total}", String(total)).replace("{sampled}", String(sampled))
     : `(Total: ${total} items)`;
 }
 
@@ -68,11 +71,11 @@ export function buildCliPrompt(
   const sampledIssues = topN(issues, CLI_ISSUE_LIMIT);
   const sampledPrs = topN(prs, CLI_PR_LIMIT);
 
-  const issuesText = sampledIssues.map((i) => formatItem(i)).join("\n") || "None";
-  const prsText = sampledPrs.map((p) => formatItem(p)).join("\n") || "None";
+  const issuesText = sampledIssues.map((i) => formatItem(i)).join("\n") || t("en").noneStr;
+  const prsText = sampledPrs.map((p) => formatItem(p)).join("\n") || t("en").noneStr;
   const releasesText = releases.length
     ? releases.map((r) => `- ${r.tag_name}: ${r.name}\n  ${(r.body ?? "").slice(0, 300)}`).join("\n")
-    : "None";
+    : t("en").noneStr;
 
   const issueNote = sampleNote(issues.length, sampledIssues.length);
   const prNote = sampleNote(prs.length, sampledPrs.length);
@@ -123,12 +126,11 @@ export function buildPeerPrompt(
   const sampledIssues = topN(issues, issueLimit);
   const sampledPrs = topN(prs, prLimit);
 
-  const noneStr = "None";
-  const issuesText = sampledIssues.map((i) => formatItem(i)).join("\n") || noneStr;
-  const prsText = sampledPrs.map((p) => formatItem(p)).join("\n") || noneStr;
+  const issuesText = sampledIssues.map((i) => formatItem(i)).join("\n") || t("en").noneStr;
+  const prsText = sampledPrs.map((p) => formatItem(p)).join("\n") || t("en").noneStr;
   const releasesText = releases.length
     ? releases.map((r) => `- ${r.tag_name}: ${r.name}\n  ${(r.body ?? "").slice(0, 300)}`).join("\n")
-    : noneStr;
+    : t("en").noneStr;
 
   const openIssues = issues.filter((i) => i.state === "open").length;
   const closedIssues = issues.filter((i) => i.state === "closed").length;
@@ -175,8 +177,9 @@ export function buildPeersComparisonPrompt(
   openclawDigest: RepoDigest,
   peerDigests: RepoDigest[],
   dateStr: string,
+  lang = "en",
 ): string {
-  const noActivityStr = "No activity in the last 24 hours.";
+  const noActivityStr = t(lang).noActivity;
 
   const openclawSection = `## OpenClaw (core reference, github.com/${openclawDigest.config.repo})\n${openclawDigest.summary}`;
 
@@ -216,9 +219,8 @@ export function buildSkillsPrompt(prs: GitHubItem[], issues: GitHubItem[], dateS
   const topPrs = topN(prs, 20);
   const topIssues = topN(issues, 15);
 
-  const noneStr = "None";
-  const prsText = topPrs.map((p) => formatItem(p)).join("\n") || noneStr;
-  const issuesText = topIssues.map((i) => formatItem(i)).join("\n") || noneStr;
+  const prsText = topPrs.map((p) => formatItem(p)).join("\n") || t("en").noneStr;
+  const issuesText = topIssues.map((i) => formatItem(i)).join("\n") || t("en").noneStr;
 
   return `You are a technical analyst focused on the Claude Code ecosystem. The following data is from github.com/anthropics/skills (official Claude Code Skills repository). Analyze the community's most-watched Skills activity (data as of ${dateStr}).
 
@@ -244,8 +246,8 @@ Style: concise and professional, include GitHub links for each item.
 `;
 }
 
-export function buildComparisonPrompt(digests: RepoDigest[], dateStr: string): string {
-  const noActivityStr = "No activity in the last 24 hours.";
+export function buildComparisonPrompt(digests: RepoDigest[], dateStr: string, lang = "en"): string {
+  const noActivityStr = t(lang).noActivity;
 
   const sections = digests
     .map((d) => {
@@ -364,13 +366,12 @@ export function buildWebReportPrompt(results: WebFetchResult[], dateStr: string)
 
       if (newItems.length === 0) return `## ${siteName}\n\n（${mode}，暂无可供分析的内容。）`;
 
-      const unableToExtract = "(Unable to extract text content)";
       const itemsText = newItems
         .map((item) =>
           [
             `### [${item.title || item.url}](${item.url})`,
             `- 分类: ${item.category} | 发布/更新: ${item.lastmod.slice(0, 10) || "未知"}`,
-            `- 内容节选: ${item.content || unableToExtract}`,
+            `- 内容节选: ${item.content || t("en").unableToExtract}`,
           ].join("\n"),
         )
         .join("\n\n");

@@ -1,11 +1,12 @@
 import fs from "fs";
 import path from "path";
+import { t } from "./strings.ts";
 
 const DIGESTS_DIR = "digests";
 const MANIFEST_PATH = "manifest.json";
 const FEED_PATH = "feed.xml";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const REPORT_FILES = [
+export const REPORT_FILES = [
   "ai-cli",
   "ai-agents",
   "ai-web",
@@ -16,15 +17,20 @@ const REPORT_FILES = [
 ] as const;
 const MAX_FEED_ITEMS = 30;
 
-const REPORT_LABELS: Record<string, string> = {
-  "ai-cli": "AI CLI Tools Digest",
-  "ai-agents": "AI Agents Ecosystem Digest",
-  "ai-web": "Official AI Content Report",
-  "ai-trending": "AI Open Source Trends",
-  "ai-hn": "Hacker News AI Community Digest",
-  "ai-weekly": "AI Tools Weekly Digest",
-  "ai-monthly": "AI Tools Monthly Digest",
+export const buildReportLabels = (lang = "en"): Record<string, string> => {
+  const s = t(lang);
+  return {
+    "ai-cli": s.manifestCli,
+    "ai-agents": s.manifestAgents,
+    "ai-web": s.manifestWeb,
+    "ai-trending": s.manifestTrending,
+    "ai-hn": s.manifestHn,
+    "ai-weekly": s.manifestWeekly,
+    "ai-monthly": s.manifestMonthly,
+  };
 };
+
+export const REPORT_LABELS: Record<string, string> = buildReportLabels();
 
 interface DateEntry {
   date: string;

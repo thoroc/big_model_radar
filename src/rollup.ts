@@ -8,6 +8,7 @@ import path from "node:path";
 import { callLlm, saveFile, autoGenFooter } from "./report.ts";
 import { buildWeeklyPrompt, buildMonthlyPrompt } from "./prompts.ts";
 import { createGitHubIssue } from "./github.ts";
+import { t } from "./strings.ts";
 
 const DIGESTS_DIR = "digests";
 const MAX_CHARS_PER_REPORT = 2500;
@@ -19,7 +20,7 @@ const ROLLUP_SOURCES = ["ai-cli", "ai-agents", "ai-trending", "ai-hn", "ai-web"]
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getDateDirs(): string[] {
+export function getDateDirs(): string[] {
   if (!fs.existsSync(DIGESTS_DIR)) return [];
   return fs
     .readdirSync(DIGESTS_DIR)
@@ -29,28 +30,28 @@ function getDateDirs(): string[] {
 }
 
 /** Read and truncate a daily digest file. Returns null if not found. */
-function readDailyDigest(date: string): string | null {
+export function readDailyDigest(date: string, lang = "en"): string | null {
   for (const type of ROLLUP_SOURCES) {
     const p = path.join(DIGESTS_DIR, date, `${type}.md`);
     if (fs.existsSync(p)) {
       const content = fs.readFileSync(p, "utf-8");
       const truncated = content.slice(0, MAX_CHARS_PER_REPORT);
-      return truncated.length < content.length ? truncated + "\n...[truncated]" : truncated;
+      return truncated.length < content.length ? truncated + "\n" + t(lang).digestTruncation : truncated;
     }
   }
   return null;
 }
 
 /** Read a weekly report file. Returns null if not found. */
-function readWeeklyDigest(date: string): string | null {
+export function readWeeklyDigest(date: string, lang = "en"): string | null {
   const p = path.join(DIGESTS_DIR, date, "ai-weekly.md");
   if (!fs.existsSync(p)) return null;
   const content = fs.readFileSync(p, "utf-8");
-  return content.slice(0, 3000) + (content.length > 3000 ? "\n...[truncated]" : "");
+  return content.slice(0, 3000) + (content.length > 3000 ? "\n" + t(lang).weeklyTruncation : "");
 }
 
 /** Format a date as ISO week string, e.g. "2026-W10". */
-function toWeekStr(date: Date): string {
+export function toWeekStr(date: Date): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -62,7 +63,8 @@ function toWeekStr(date: Date): string {
 // Weekly rollup
 // ---------------------------------------------------------------------------
 
-export async function runWeeklyRollup(): Promise<void> {
+export async function runWeeklyRollup(lang = "en"): Promise<void> {
+  const s = t(lang);
   const now = new Date();
   const cstDate = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   const dateStr = cstDate.toISOString().slice(0, 10);
@@ -77,7 +79,7 @@ export async function runWeeklyRollup(): Promise<void> {
 
   const dailyDigests: Record<string, string> = {};
   for (const date of last7) {
-    const content = readDailyDigest(date);
+    const content = readDailyDigest(date, lang);
     if (content) dailyDigests[date] = content;
   }
 
@@ -90,19 +92,21 @@ export async function runWeeklyRollup(): Promise<void> {
     `[weekly] Found ${Object.keys(dailyDigests).length} daily digests: ${Object.keys(dailyDigests).join(", ")}`,
   );
 
-  const footer = autoGenFooter();
+  const footer = autoGenFooter(lang);
 
   console.log("[weekly] Calling LLM for weekly report...");
   const summary = await callLlm(buildWeeklyPrompt(dailyDigests, weekStr), 8192);
   const content =
-    `# AI Tools Ecosystem Weekly Report ${weekStr}\n\n` +
-    `> Coverage: ${last7[last7.length - 1]} ~ ${last7[0]} | Generated: ${utcStr} UTC\n\n` +
+    `# ${s.weeklyTitle} ${weekStr}\n\n` +
+    s.weeklyMeta.replace("{range}", `${last7[last7.length - 1]} ~ ${last7[0]}`).replace("{utcStr}", utcStr) +
+    `\n\n` +
     `---\n\n` +
     summary +
     footer;
   console.log(`  Saved ${saveFile(content, dateStr, "ai-weekly.md")}`);
   if (digestRepo) {
-    const url = await createGitHubIssue(`📅 AI Tools Weekly Report ${weekStr}`, content, "weekly");
+    const issueTitle = `📅 AI Tools Weekly Report ${weekStr}`;
+    const url = await createGitHubIssue(issueTitle, content, "weekly", lang);
     console.log(`  Created weekly issue: ${url}`);
   }
 
@@ -113,7 +117,8 @@ export async function runWeeklyRollup(): Promise<void> {
 // Monthly rollup
 // ---------------------------------------------------------------------------
 
-export async function runMonthlyRollup(): Promise<void> {
+export async function runMonthlyRollup(lang = "en"): Promise<void> {
+  const s = t(lang);
   const now = new Date();
   const cstDate = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   const prevMonth = new Date(Date.UTC(cstDate.getUTCFullYear(), cstDate.getUTCMonth() - 1, 1));
@@ -133,18 +138,18 @@ export async function runMonthlyRollup(): Promise<void> {
   let sourceLabel: string;
 
   if (weeklyDates.length >= 2) {
-    sourceLabel = `${weeklyDates.length} weekly reports`;
+    sourceLabel = s.sourceLabelWeekly.replace("{n}", String(weeklyDates.length));
     sourceDigests = {};
     for (const date of weeklyDates) {
-      const content = readWeeklyDigest(date);
+      const content = readWeeklyDigest(date, lang);
       if (content) sourceDigests[date] = content;
     }
   } else {
     const sampled = monthDates.filter((_, i) => i % 4 === 0).slice(0, 10);
-    sourceLabel = `${sampled.length} daily reports (sampled every 4 days)`;
+    sourceLabel = s.sourceLabelDailySampled.replace("{n}", String(sampled.length));
     sourceDigests = {};
     for (const date of sampled) {
-      const content = readDailyDigest(date);
+      const content = readDailyDigest(date, lang);
       if (content) sourceDigests[date] = content;
     }
   }
@@ -156,19 +161,21 @@ export async function runMonthlyRollup(): Promise<void> {
 
   console.log(`[monthly] Source: ${sourceLabel}`);
 
-  const footer = autoGenFooter();
+  const footer = autoGenFooter(lang);
 
   console.log("[monthly] Calling LLM for monthly report...");
   const summary = await callLlm(buildMonthlyPrompt(sourceDigests, monthStr), 8192);
   const content =
-    `# AI Tools Ecosystem Monthly Report ${monthStr}\n\n` +
-    `> Sources: ${sourceLabel} | Generated: ${utcStr} UTC\n\n` +
+    `# ${s.monthlyTitle} ${monthStr}\n\n` +
+    s.monthlyMeta.replace("{sources}", sourceLabel).replace("{utcStr}", utcStr) +
+    `\n\n` +
     `---\n\n` +
     summary +
     footer;
   console.log(`  Saved ${saveFile(content, dateStr, "ai-monthly.md")}`);
   if (digestRepo) {
-    const url = await createGitHubIssue(`📆 AI Tools Monthly Report ${monthStr}`, content, "monthly");
+    const issueTitle = `📆 AI Tools Monthly Report ${monthStr}`;
+    const url = await createGitHubIssue(issueTitle, content, "monthly", lang);
     console.log(`  Created monthly issue: ${url}`);
   }
 

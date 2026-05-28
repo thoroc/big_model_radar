@@ -3,6 +3,8 @@
  * Reads GITHUB_TOKEN and DIGEST_REPO from environment at call time.
  */
 
+import { t } from "./strings.ts";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -62,7 +64,7 @@ export interface GitHubRelease {
 /** Maximum pages to fetch for paginated repos (100 items/page). */
 const MAX_PAGES = 5;
 
-function headers(): Record<string, string> {
+export function headers(): Record<string, string> {
   return {
     Authorization: `Bearer ${process.env["GITHUB_TOKEN"] ?? ""}`,
     Accept: "application/vnd.github+json",
@@ -182,12 +184,18 @@ export async function fetchSkillsData(repo: string): Promise<{ prs: GitHubItem[]
 }
 
 const GITHUB_ISSUE_BODY_LIMIT = 65536;
-const TRUNCATION_NOTICE = "\n\n---\n> ⚠️ 内容超过 GitHub Issue 上限，完整报告见提交的 Markdown 文件。";
+const getTruncationNotice = (lang = "en"): string => t(lang).issueTruncation;
 
-export async function createGitHubIssue(title: string, body: string, label: string): Promise<string> {
+export async function createGitHubIssue(
+  title: string,
+  body: string,
+  label: string,
+  lang = "en",
+): Promise<string> {
   const digestRepo = process.env["DIGEST_REPO"] ?? "";
+  const truncation = getTruncationNotice(lang);
   if (body.length > GITHUB_ISSUE_BODY_LIMIT) {
-    body = body.slice(0, GITHUB_ISSUE_BODY_LIMIT - TRUNCATION_NOTICE.length) + TRUNCATION_NOTICE;
+    body = body.slice(0, GITHUB_ISSUE_BODY_LIMIT - truncation.length) + truncation;
   }
   const LABEL_COLORS: Record<string, string> = {
     digest: "1d76db",

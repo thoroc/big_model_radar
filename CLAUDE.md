@@ -13,6 +13,8 @@ pnpm lint           # ESLint
 pnpm lint:fix       # ESLint --fix
 pnpm format         # Prettier --write src
 pnpm format:check   # Prettier --check src
+pnpm test           # vitest run
+pnpm test:watch     # vitest watch mode
 ```
 
 Required env vars for local runs:
@@ -41,6 +43,7 @@ The pipeline runs in four sequential phases, each implemented as a named async f
 | `src/github.ts` | GitHub API helpers: `fetchRecentItems`, `fetchRecentReleases`, `fetchSkillsData`, `createGitHubIssue` |
 | `src/prompts.ts` | LLM prompt builders (one per report type) and `formatItem` |
 | `src/report.ts` | `callLlm` (with concurrency limiter), `saveFile`, `autoGenFooter` |
+| `src/strings.ts` | Locale catalog with `t()` function, `LocaleStrings` interface, `SUPPORTED_LOCALES` |
 | `src/web.ts` | Sitemap-based web content fetching; state persisted to `digests/web-state.json` |
 | `src/trending.ts` | GitHub Trending HTML scraper + Search API topic queries |
 | `src/hn.ts` | Hacker News top AI stories via Algolia HN Search API |

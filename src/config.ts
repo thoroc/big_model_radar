@@ -24,6 +24,7 @@ interface RawConfig {
   skills_repo?: string;
   openclaw?: RawRepoEntry;
   openclaw_peers?: RawRepoEntry[];
+  languages?: string[];
 }
 
 export interface RadarConfig {
@@ -31,6 +32,7 @@ export interface RadarConfig {
   skillsRepo: string;
   openclaw: RepoConfig;
   openclawPeers: RepoConfig[];
+  languages: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -55,6 +57,8 @@ const DEFAULT_OPENCLAW: RepoConfig = {
   name: "OpenClaw",
   paginated: true,
 };
+
+export const DEFAULT_LANGUAGES = ["en"];
 
 const DEFAULT_OPENCLAW_PEERS: RepoConfig[] = [
   { id: "nanobot", repo: "HKUDS/nanobot", name: "NanoBot", paginated: true },
@@ -87,6 +91,7 @@ export function loadConfig(configPath = "config.yml"): RadarConfig {
       skillsRepo: DEFAULT_SKILLS_REPO,
       openclaw: DEFAULT_OPENCLAW,
       openclawPeers: DEFAULT_OPENCLAW_PEERS,
+      languages: DEFAULT_LANGUAGES,
     };
   }
 
@@ -109,10 +114,24 @@ export function loadConfig(configPath = "config.yml"): RadarConfig {
       ? raw.openclaw_peers.map(toRepoConfig)
       : DEFAULT_OPENCLAW_PEERS;
 
+  const languages: string[] =
+    Array.isArray(raw?.languages) && raw.languages.length > 0 ? raw.languages.map(String) : DEFAULT_LANGUAGES;
+
   console.log(
     `[config] Loaded from ${configPath}: ` +
       `${cliRepos.length} CLI repos, ${openclawPeers.length} OpenClaw peers`,
   );
 
-  return { cliRepos, skillsRepo, openclaw, openclawPeers };
+  return { cliRepos, skillsRepo, openclaw, openclawPeers, languages };
 }
+
+export const getEnabledLangs = (config?: RadarConfig): string[] => {
+  const envLangs = process.env["REPORT_LANGS"];
+  if (envLangs)
+    return envLangs
+      .split(",")
+      .map((l) => l.trim())
+      .filter(Boolean);
+  if (config?.languages) return config.languages;
+  return DEFAULT_LANGUAGES;
+};

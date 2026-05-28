@@ -37,6 +37,7 @@ import { loadWebState, saveWebState, fetchSiteContent, type WebFetchResult, type
 import { fetchTrendingData, type TrendingData } from "./trending.ts";
 import { fetchHnData, type HnData } from "./hn.ts";
 import { loadConfig } from "./config.ts";
+import { t } from "./strings.ts";
 
 // ---------------------------------------------------------------------------
 // Repo config — loaded from config.yml, falls back to built-in defaults
@@ -153,11 +154,12 @@ async function generateSummaries(
   peerDigests: RepoDigest[];
   trendingSummary: string;
 }> {
-  const noActivity = "No activity in the last 24 hours.";
-  const summaryFailed = "⚠️ Summary generation failed.";
-  const skillsFailed = "⚠️ Skills summary generation failed.";
-  const trendingNoData = "⚠️ Trending data unavailable, unable to generate report.";
-  const trendingFailed = "⚠️ Trending report generation failed.";
+  const s = t("en");
+  const noActivity = s.noActivity;
+  const summaryFailed = s.summaryFailed;
+  const skillsFailed = s.skillsFailed;
+  const trendingNoData = s.trendingNoData;
+  const trendingFailed = s.trendingFailed;
 
   const [cliDigests, openclawSummary, skillsSummary, peerDigests, trendingSummary] = await Promise.all([
     Promise.all(
@@ -243,21 +245,25 @@ async function generateSummaries(
 // Report content builders
 // ---------------------------------------------------------------------------
 
-function buildCliReportContent(
+export function buildCliReportContent(
   cliDigests: RepoDigest[],
   skillsSummary: string,
   comparison: string,
   utcStr: string,
   dateStr: string,
   footer: string,
+  lang = "en",
 ): string {
+  const s = t(lang);
   const repoLinks =
     cliDigests.map((d) => `- [${d.config.name}](https://github.com/${d.config.repo})`).join("\n") +
     `\n- [Claude Code Skills](https://github.com/${CLAUDE_SKILLS_REPO})`;
 
   const skillsSection =
-    `## Claude Code Skills Highlights\n\n` +
-    `> Source: [anthropics/skills](https://github.com/${CLAUDE_SKILLS_REPO})\n\n` +
+    s.cliSkillsHeading +
+    `\n\n` +
+    s.cliSkillsSource.replace("{repo}", CLAUDE_SKILLS_REPO) +
+    `\n\n` +
     `${skillsSummary}\n\n---\n\n`;
 
   const toolSections = cliDigests
@@ -275,20 +281,23 @@ function buildCliReportContent(
     .join("\n\n");
 
   return (
-    `# AI CLI Tools Community Digest ${dateStr}\n\n` +
-    `> Generated: ${utcStr} UTC | Tools covered: ${cliDigests.length}\n\n` +
+    `# ${s.cliTitle} ${dateStr}\n\n` +
+    s.cliMeta.replace("{utcStr}", utcStr).replace("{count}", String(cliDigests.length)) +
+    `\n\n` +
     `${repoLinks}\n\n` +
     `---\n\n` +
-    `## Cross-Tool Comparison\n\n` +
+    s.cliComparison +
+    `\n\n` +
     comparison +
     `\n\n---\n\n` +
-    `## Per-Tool Reports\n\n` +
+    s.cliDetail +
+    `\n\n` +
     toolSections +
     footer
   );
 }
 
-function buildOpenclawReportContent(
+export function buildOpenclawReportContent(
   fetchedOpenclaw: RepoFetch,
   peerDigests: RepoDigest[],
   openclawSummary: string,
@@ -296,7 +305,9 @@ function buildOpenclawReportContent(
   utcStr: string,
   dateStr: string,
   footer: string,
+  lang = "en",
 ): string {
+  const s = t(lang);
   const { issues, prs } = fetchedOpenclaw;
 
   const peersRepoLinks =
@@ -317,17 +328,25 @@ function buildOpenclawReportContent(
     .join("\n\n");
 
   return (
-    `# OpenClaw Ecosystem Digest ${dateStr}\n\n` +
-    `> Issues: ${issues.length} | PRs: ${prs.length} | Projects covered: ${1 + OPENCLAW_PEERS.length} | Generated: ${utcStr} UTC\n\n` +
+    `# ${s.openclawTitle} ${dateStr}\n\n` +
+    s.openclawMeta
+      .replace("{issues}", String(issues.length))
+      .replace("{prs}", String(prs.length))
+      .replace("{projects}", String(1 + OPENCLAW_PEERS.length))
+      .replace("{utcStr}", utcStr) +
+    `\n\n` +
     `${peersRepoLinks}\n\n` +
     `---\n\n` +
-    `## OpenClaw Deep Dive\n\n` +
+    s.openclawDeepDive +
+    `\n\n` +
     openclawSummary +
     `\n\n---\n\n` +
-    `## Cross-Ecosystem Comparison\n\n` +
+    s.openclawComparison +
+    `\n\n` +
     peersComparison +
     `\n\n---\n\n` +
-    `## Peer Project Reports\n\n` +
+    s.openclawPeers +
+    `\n\n` +
     peerDetailSections +
     footer
   );
@@ -344,7 +363,9 @@ async function saveWebReport(
   dateStr: string,
   digestRepo: string,
   footer: string,
+  lang = "en",
 ): Promise<void> {
+  const s = t(lang);
   const hasNewContent = webResults.some((r) => r.newItems.length > 0);
 
   if (hasNewContent) {
@@ -359,10 +380,13 @@ async function saveWebReport(
       const openaiNew = webResults.find((r) => r.site === "openai")?.newItems.length ?? 0;
       const openaiTotal = webResults.find((r) => r.site === "openai")?.totalDiscovered ?? 0;
 
+      const mode = isFirstRun ? "First full crawl" : "Today's update";
       const webContent =
-        `# Official AI Content Report ${dateStr}\n\n` +
-        `> ${isFirstRun ? "First full crawl" : "Today's update"} | New content: ${totalNew} articles | Generated: ${utcStr} UTC\n\n` +
-        `Sources:\n` +
+        `# ${s.webTitle} ${dateStr}\n\n` +
+        s.webMeta.replace("{mode}", mode).replace("{count}", String(totalNew)).replace("{utcStr}", utcStr) +
+        `\n\n` +
+        s.webSources +
+        `\n` +
         `- Anthropic: [anthropic.com](https://www.anthropic.com) — ${anthropicNew} new articles (sitemap total: ${anthropicTotal})\n` +
         `- OpenAI: [openai.com](https://openai.com) — ${openaiNew} new articles (sitemap total: ${openaiTotal})\n\n` +
         `---\n\n` +
@@ -372,8 +396,8 @@ async function saveWebReport(
       console.log(`  Saved ${saveFile(webContent, dateStr, "ai-web.md")}`);
 
       if (digestRepo) {
-        const webTitle = `🌐 Official AI Content Report ${dateStr}${isFirstRun ? " (First Crawl)" : ""}`;
-        const webUrl = await createGitHubIssue(webTitle, webContent, "web");
+        const webIssueTitle = `${s.issueWebTitle} ${dateStr}${isFirstRun ? " (First Crawl)" : ""}`;
+        const webUrl = await createGitHubIssue(webIssueTitle, webContent, s.issueLabelWeb);
         console.log(`  Created web issue: ${webUrl}`);
       }
     } catch (err) {
@@ -394,7 +418,9 @@ async function saveTrendingReport(
   dateStr: string,
   digestRepo: string,
   footer: string,
+  lang = "en",
 ): Promise<void> {
+  const s = t(lang);
   const hasData = trendingData.trendingRepos.length > 0 || trendingData.searchRepos.length > 0;
   if (!hasData) {
     console.log(`  [trending] No data available, skipping report.`);
@@ -402,7 +428,9 @@ async function saveTrendingReport(
   }
 
   const trendingContent =
-    `# AI Open Source Trends ${dateStr}\n\n> Sources: GitHub Trending + GitHub Search API | Generated: ${utcStr} UTC\n\n---\n\n` +
+    `# ${s.trendingTitle} ${dateStr}\n\n` +
+    s.trendingMeta.replace("{utcStr}", utcStr) +
+    `\n\n---\n\n` +
     trendingSummary +
     footer;
 
@@ -410,9 +438,9 @@ async function saveTrendingReport(
 
   if (digestRepo) {
     const trendingUrl = await createGitHubIssue(
-      `📈 AI Open Source Trends ${dateStr}`,
+      `${s.issueTrendingTitle} ${dateStr}`,
       trendingContent,
-      "trending",
+      s.issueLabelTrending,
     );
     console.log(`  Created trending issue: ${trendingUrl}`);
   }
@@ -424,7 +452,9 @@ async function saveHnReport(
   dateStr: string,
   digestRepo: string,
   footer: string,
+  lang = "en",
 ): Promise<void> {
+  const s = t(lang);
   if (!hnData.fetchSuccess) {
     console.log(`  [hn] No data available, skipping report.`);
     return;
@@ -434,9 +464,9 @@ async function saveHnReport(
   try {
     const hnSummary = await callLlm(buildHnPrompt(hnData, dateStr));
     const hnContent =
-      `# Hacker News AI Community Digest ${dateStr}\n\n` +
-      `> Source: [Hacker News](https://news.ycombinator.com/) | ` +
-      `${hnData.stories.length} stories | Generated: ${utcStr} UTC\n\n` +
+      `# ${s.hnTitle} ${dateStr}\n\n` +
+      s.hnMeta.replace("{count}", String(hnData.stories.length)).replace("{utcStr}", utcStr) +
+      `\n\n` +
       `---\n\n` +
       hnSummary +
       footer;
@@ -444,7 +474,7 @@ async function saveHnReport(
     console.log(`  Saved ${saveFile(hnContent, dateStr, "ai-hn.md")}`);
 
     if (digestRepo) {
-      const hnUrl = await createGitHubIssue(`📰 Hacker News AI Digest ${dateStr}`, hnContent, "hn");
+      const hnUrl = await createGitHubIssue(`${s.issueHnTitle} ${dateStr}`, hnContent, s.issueLabelHn);
       console.log(`  Created HN issue: ${hnUrl}`);
     }
   } catch (err) {
@@ -527,15 +557,15 @@ async function main(): Promise<void> {
 
   if (digestRepo) {
     const cliUrl = await createGitHubIssue(
-      `📊 AI CLI Tools Community Digest ${dateStr}`,
+      `${t("en").issueCliTitle} ${dateStr}`,
       digestContent,
-      "digest",
+      t("en").issueLabelDigest,
     );
     console.log(`  Created CLI issue: ${cliUrl}`);
     const openclawUrl = await createGitHubIssue(
-      `🦞 OpenClaw Ecosystem Digest ${dateStr}`,
+      `${t("en").issueOpenclawTitle} ${dateStr}`,
       openclawContent,
-      "openclaw",
+      t("en").issueLabelOpenclaw,
     );
     console.log(`  Created OpenClaw issue: ${openclawUrl}`);
   }
@@ -550,7 +580,9 @@ async function main(): Promise<void> {
   console.log("Done!");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

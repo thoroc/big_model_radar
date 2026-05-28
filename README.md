@@ -2,7 +2,7 @@
 
 English | [中文](./README.zh.md)
 
-A GitHub Actions workflow that runs every morning at 08:00 CST. It tracks GitHub activity from AI CLI tools, OpenClaw and its peer projects in the AI agent ecosystem, scrapes official news and research from Anthropic and OpenAI, and monitors the GitHub AI trending repos daily — then publishes bilingual (Chinese + English) daily digests as GitHub Issues and committed Markdown files. Weekly and monthly rollup reports are also generated automatically.
+A GitHub Actions workflow that runs every morning at 08:00 CST. It tracks GitHub activity from AI CLI tools, OpenClaw and its peer projects in the AI agent ecosystem, scrapes official news and research from Anthropic and OpenAI, and monitors the GitHub AI trending repos daily — then publishes English daily digests as GitHub Issues and committed Markdown files. Weekly and monthly rollup reports are also generated automatically.
 
 ## Web UI
 
@@ -84,7 +84,7 @@ wrangler deploy
 
 **[t.me/agents_radar](https://t.me/agents_radar)**
 
-Subscribe to get daily digest notifications pushed directly to Telegram. Each message links to all reports for that day (ZH and EN variants) plus the Web UI and RSS feed.
+Subscribe to get daily digest notifications pushed directly to Telegram. Each message links to all reports for that day plus the Web UI and RSS feed.
 
 ## Tracked sources
 
@@ -162,6 +162,7 @@ New articles are detected by comparing sitemap `lastmod` timestamps against a pe
 - Publishes GitHub Issues for each report type; commits Markdown files to `digests/YYYY-MM-DD/`
 - Runs on a daily schedule via GitHub Actions; supports manual triggering
 - All tracked repositories are configurable via `config.yml` — no code changes needed
+- Centralized locale system via `src/strings.ts` — English-only `t()` catalog with `en` locale
 
 ## Setup
 
@@ -185,6 +186,8 @@ openclaw_peers:
     name: My Agent
 ```
 
+> The `languages` field at the top of `config.yml` controls which locales are active. Defaults to `["en"]` if absent. Currently only `"en"` is supported.
+
 ### 3. Add Secrets
 
 Go to **Settings → Secrets and variables → Actions** and add:
@@ -194,7 +197,6 @@ Go to **Settings → Secrets and variables → Actions** and add:
 | `OPENAI_API_KEY` | ✅ | API key for any OpenAI-compatible endpoint |
 | `OPENAI_BASE_URL` | optional | API endpoint override. Leave unset for OpenAI, or set a compatible provider URL such as `https://api.openai.com/v1` |
 | `OPENAI_MODEL` | optional | Model name passed to `chat/completions`, e.g. `gpt-4.1-mini` |
-| `REPORT_LANGS` | optional | Report languages, e.g. `zh` or `zh,en` (default: `zh`) |
 | `PAGES_URL` | recommended | Public site base URL, e.g. `https://your-user.github.io/big_model_radar`. Prefer a repository variable for this |
 | `TELEGRAM_BOT_TOKEN` | optional | Telegram bot token from [@BotFather](https://t.me/BotFather). If set, a message is sent after each digest run |
 | `TELEGRAM_CHAT_ID` | optional | Telegram chat/channel/group ID to send notifications to. Required if you enable Telegram notifications |
@@ -230,10 +232,16 @@ export GITHUB_TOKEN=ghp_xxxxx
 export OPENAI_BASE_URL=https://api.openai.com/v1
 export OPENAI_API_KEY=sk-xxxxxxxx
 export OPENAI_MODEL=gpt-4.1-mini
-export REPORT_LANGS=zh
 export DIGEST_REPO=your-username/big_model_radar  # optional; omit to only write files
 
 pnpm start
+```
+
+## Running tests
+
+```bash
+pnpm test        # run all tests (vitest)
+pnpm test:watch  # run in watch mode during development
 ```
 
 ## Output format
@@ -250,11 +258,9 @@ Files are written to `digests/YYYY-MM-DD/`:
 
 A shared state file `digests/web-state.json` tracks which web URLs have been seen; it is committed alongside the daily digests.
 
-Each report is generated in both Chinese (`ai-cli.md`) and English (`ai-cli-en.md`). The Web UI sidebar shows ZH / EN toggle buttons for reports that have both variants.
-
 ---
 
-`ai-cli.md` / `ai-cli-en.md` structure:
+`ai-cli.md` structure:
 ```
 ## Cross-Tool Comparison
   Ecosystem overview / Activity comparison table / Shared themes / Differentiation / Trend signals
@@ -272,7 +278,7 @@ Each report is generated in both Chinese (`ai-cli.md`) and English (`ai-cli-en.m
   <details> Qwen Code      — ...
 ```
 
-`ai-agents.md` / `ai-agents-en.md` structure:
+`ai-agents.md` structure:
 ```
 Issues: N | PRs: N | Projects covered: 10
 
@@ -297,7 +303,7 @@ Issues: N | PRs: N | Projects covered: 10
   <details> CoPaw      — ...
 ```
 
-`ai-web.md` / `ai-web-en.md` structure:
+`ai-web.md` structure:
 ```
 Sources: anthropic.com (N articles) + openai.com (N articles)
 
@@ -309,7 +315,7 @@ Notable details
 [First full crawl also includes: Content landscape overview]
 ```
 
-`ai-trending.md` / `ai-trending-en.md` structure:
+`ai-trending.md` structure:
 ```
 Sources: GitHub Trending + GitHub Search API
 
@@ -324,7 +330,7 @@ Trend signal analysis
 Community focus
 ```
 
-`ai-hn.md` / `ai-hn-en.md` structure:
+`ai-hn.md` structure:
 ```
 Sources: Hacker News (top-30 AI stories, last 24h)
 
@@ -338,7 +344,7 @@ Community sentiment signals
 Worth reading
 ```
 
-`ai-weekly.md` / `ai-weekly-en.md` structure (generated every Monday):
+`ai-weekly.md` structure (generated every Monday):
 ```
 Coverage: YYYY-MM-DD ~ YYYY-MM-DD  (last 7 daily digests)
 
@@ -349,7 +355,7 @@ Community momentum
 Outlook
 ```
 
-`ai-monthly.md` / `ai-monthly-en.md` structure (generated on the 1st of each month):
+`ai-monthly.md` structure (generated on the 1st of each month):
 ```
 Sources: N weekly reports  (or sampled daily reports if fewer than 2 weeklies available)
 

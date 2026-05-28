@@ -10,6 +10,7 @@
  */
 
 import fs from "node:fs";
+import { t } from "./strings.ts";
 
 const BOT_TOKEN = process.env["TELEGRAM_BOT_TOKEN"] ?? "";
 const CHAT_ID = process.env["TELEGRAM_CHAT_ID"] ?? "";
@@ -29,14 +30,17 @@ function resolvePagesUrl(): string {
 
 const PAGES_URL = resolvePagesUrl();
 
-const LABELS: Record<string, string> = {
-  "ai-cli": "AI CLI Tools",
-  "ai-agents": "AI Agents Ecosystem",
-  "ai-web": "Official Updates",
-  "ai-trending": "GitHub Trends",
-  "ai-hn": "HN Community",
-  "ai-weekly": "AI Tools Weekly",
-  "ai-monthly": "AI Tools Monthly",
+const buildLabels = (lang = "en"): Record<string, string> => {
+  const s = t(lang);
+  return {
+    "ai-cli": s.notifyCli,
+    "ai-agents": s.notifyAgents,
+    "ai-web": s.notifyWeb,
+    "ai-trending": s.notifyTrending,
+    "ai-hn": s.notifyHn,
+    "ai-weekly": s.notifyWeekly,
+    "ai-monthly": s.notifyMonthly,
+  };
 };
 
 async function sendTelegram(text: string): Promise<void> {
@@ -57,7 +61,8 @@ async function sendTelegram(text: string): Promise<void> {
   }
 }
 
-function buildMessage(date: string, reports: string[]): string {
+export function buildMessage(date: string, reports: string[], lang = "en"): string {
+  const labels = buildLabels(lang);
   const isWeekly = reports.includes("ai-weekly");
   const isMonthly = reports.includes("ai-monthly");
 
@@ -70,7 +75,7 @@ function buildMessage(date: string, reports: string[]): string {
   ];
 
   for (const r of ordered) {
-    const label = LABELS[r] ?? r;
+    const label = labels[r] ?? r;
     const url = `${PAGES_URL}/#${date}/${r}`;
     lines.push(`• <a href="${url}">${label}</a>`);
   }
