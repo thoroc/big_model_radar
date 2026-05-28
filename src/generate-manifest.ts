@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { t } from "./strings.ts";
+import { t, SUPPORTED_LOCALES, LANGUAGE_NAMES } from "./strings.ts";
+import { resolveFilename } from "./locale.ts";
 
 const DIGESTS_DIR = "digests";
 const MANIFEST_PATH = "manifest.json";
@@ -38,14 +39,30 @@ export const buildReportLabels = (lang = "en"): Record<string, string> => {
 };
 
 export const REPORT_LABELS: Record<string, string> = buildReportLabels();
+const ALL_LABELS: Record<string, Record<string, string>> = {};
+for (const code of SUPPORTED_LOCALES) {
+  ALL_LABELS[code] = buildReportLabels(code);
+}
+
+const ALL_LANGS: Record<string, string> = {};
+for (const code of SUPPORTED_LOCALES) {
+  ALL_LANGS[code] = LANGUAGE_NAMES[code] ?? code;
+}
+
+interface ReportEntry {
+  id: string;
+  langs: string[];
+}
 
 interface DateEntry {
   date: string;
-  reports: string[];
+  reports: ReportEntry[];
 }
 
 interface Manifest {
   generated: string;
+  langs: Record<string, string>;
+  labels: Record<string, Record<string, string>>;
   dates: DateEntry[];
 }
 
@@ -79,19 +96,28 @@ function escapeXml(s: string): string {
 
 const SITE_URL = resolveSiteUrl();
 
-const entries = fs
+const entries: DateEntry[] = fs
   .readdirSync(DIGESTS_DIR)
   .filter((name) => DATE_RE.test(name) && fs.statSync(path.join(DIGESTS_DIR, name)).isDirectory())
   .sort()
   .reverse()
   .map((date) => {
-    const reports = REPORT_FILES.filter((r) => fs.existsSync(path.join(DIGESTS_DIR, date, `${r}.md`)));
+    const reports: ReportEntry[] = REPORT_FILES
+      .map((r) => {
+        const langs = SUPPORTED_LOCALES.filter((lang) =>
+          fs.existsSync(path.join(DIGESTS_DIR, date, resolveFilename(r, lang))),
+        );
+        return { id: r, langs };
+      })
+      .filter((r) => r.langs.length > 0);
     return { date, reports };
   })
   .filter((e) => e.reports.length > 0);
 
 const manifest: Manifest = {
   generated: new Date().toISOString(),
+  langs: ALL_LANGS,
+  labels: ALL_LABELS,
   dates: entries,
 };
 
@@ -102,8 +128,8 @@ console.log(`manifest.json updated: ${entries.length} dates`);
 
 const feedItems: Array<{ date: string; report: string }> = [];
 outer: for (const entry of entries) {
-  for (const report of entry.reports) {
-    feedItems.push({ date: entry.date, report });
+  for (const r of entry.reports) {
+    feedItems.push({ date: entry.date, report: r.id });
     if (feedItems.length >= MAX_FEED_ITEMS) break outer;
   }
 }
@@ -114,7 +140,7 @@ const itemsXml = feedItems
   .map(({ date, report }) => {
     const label = REPORT_LABELS[report] ?? report;
     const title = `${label} ${date}`;
-    const link = `${SITE_URL}/#${date}/${report}`;
+    const link = `${SITE_URL}/#${date}/en/${report}`;
     const parts = date.split("-").map(Number);
     const pubDate = toRfc822(new Date(Date.UTC(parts[0]!, parts[1]! - 1, parts[2]!)));
     return [

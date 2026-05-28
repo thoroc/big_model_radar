@@ -77,7 +77,16 @@
       text-decoration: none; display: inline-block;
       transition: border-color 0.15s, color 0.15s;
     }
-    #themeBtn:hover, #rssLink:hover { border-color: var(--accent); color: var(--accent); }
+    #themeBtn:hover, #rssLink:hover, .lang-select:hover { border-color: var(--accent); color: var(--accent); }
+    .lang-select {
+      background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+      padding: 4px 8px; border-radius: 4px; cursor: pointer;
+      font-family: inherit; font-size: 10px; letter-spacing: 0.06em;
+      transition: border-color 0.15s, color 0.15s;
+      text-transform: uppercase;
+    }
+    .lang-select:focus { outline: none; border-color: var(--accent); }
+    .lang-select option { background: var(--bg); color: var(--text); }
 
     /* ── Body ── */
     #body { display: flex; flex: 1; overflow: hidden; }
@@ -229,6 +238,7 @@
     </div>
     <div class="hdr-right">
       <div class="signal"></div>
+      <select id="langSelect" class="lang-select" title="Language"></select>
       <a id="rssLink" href="./feed.xml" title="RSS Feed">⊕ RSS</a>
       <button id="themeBtn">◐ LIGHT</button>
     </div>
@@ -236,8 +246,8 @@
 
   <div id="body">
     <div id="sidebar">
-      <div id="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
-        ☰ &nbsp;选择报告
+      <div id="mob-toggle">
+        ☰ <span id="mobLabel">选择报告</span>
       </div>
       <div class="side-label">REPORTS</div>
       <div class="search-wrap">
@@ -258,7 +268,6 @@
 <script>
 marked.use({ breaks: true, gfm: true });
 
-// Allow <details> and <summary> which DOMPurify strips by default
 DOMPurify.addHook('uponSanitizeElement', (node, data) => {
   if (data.tagName === 'details' || data.tagName === 'summary') {
     data.allowedTags[data.tagName] = true;
@@ -273,6 +282,28 @@ function renderMarkdown(raw) {
   });
 }
 
+// ── UI locale strings ──
+const UI = {
+  en: {
+    mobLabel: 'Reports',
+    loading: 'Loading...',
+    searchPlaceholder: 'Search full text...',
+    searchBuilding: 'Building index…',
+    searchMatched: (n) => `Matched ${n} days`,
+    errorManifest: 'Could not load manifest.json',
+  },
+  zh: {
+    mobLabel: '选择报告',
+    loading: '正在加载…',
+    searchPlaceholder: '搜索全文...',
+    searchBuilding: '正在建立索引…',
+    searchMatched: (n) => `匹配到 ${n} 天`,
+    errorManifest: '无法加载 manifest.json',
+  },
+};
+function ui(key, lang) { return UI[lang]?.[key] ?? UI.en[key]; }
+
+// ── Report label fallback ──
 const LABELS = {
   'ai-cli':          'AI CLI Tools',
   'ai-agents':       'AI Agents Ecosystem',
@@ -295,14 +326,10 @@ function applyTheme(t) {
 applyTheme(theme);
 themeBtn.onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
 
-// ── Routing ──
-function getHash() {
-  const [date, report] = location.hash.slice(1).split('/');
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) && report ? { date, report } : null;
-}
-
 // ── State ──
 let currentKey = null;
+let currentLang = 'en';
+let manifestData = null;
 let searchIndex = null;
 let searchReady = false;
 let searchQuery = '';
@@ -310,11 +337,121 @@ let searchDebounce = null;
 
 const searchInput = document.getElementById('searchInput');
 const searchStatus = document.getElementById('searchStatus');
+const langSelect = document.getElementById('langSelect');
+const mobLabel = document.getElementById('mobLabel');
+const mobToggle = document.getElementById('mob-toggle');
+
+mobToggle.onclick = () => document.getElementById('sidebar').classList.toggle('open');
 
 function setSearchStatus(text) {
   searchStatus.textContent = text || '';
 }
 
+function reportFilename(reportId, lang) {
+  return lang === 'en' ? `${reportId}.md` : `${reportId}-${lang}.md`;
+}
+
+function reportLabel(reportId, lang) {
+  return manifestData?.labels?.[lang]?.[reportId] || LABELS[reportId] || reportId;
+}
+
+// ── Normalize manifest (handle old format without langs/labels) ──
+function normalizeManifest(raw) {
+  const langs = raw.langs || { en: 'English' };
+  const labels = raw.labels || { en: Object.fromEntries(Object.keys(LABELS).map(k => [k, LABELS[k]])) };
+  const dates = (raw.dates || []).map((d) => {
+    if (!d.reports.length) return null;
+    const reports = d.reports.map((r) => {
+      if (typeof r === 'string') return { id: r, langs: ['en'] };
+      return r;
+    });
+    return { ...d, reports };
+  }).filter(Boolean);
+  return { ...raw, langs, labels, dates };
+}
+
+// ── Language ──
+function rebuildUI() {
+  const lang = currentLang;
+
+  // Update chrome text
+  mobLabel.textContent = ui('mobLabel', lang);
+  searchInput.placeholder = ui('searchPlaceholder', lang);
+
+  // Populate lang selector (only if we have manifest data)
+  if (manifestData) {
+    langSelect.innerHTML = Object.entries(manifestData.langs)
+      .map(([code, name]) => `<option value="${code}"${code === lang ? ' selected' : ''}>${name}</option>`)
+      .join('');
+  }
+
+  // Rebuild sidebar filtered by current language
+  document.getElementById('nav').innerHTML = '';
+  buildNav(manifestData.dates, lang);
+  initSearch(manifestData.dates, lang);
+
+  // Try to load the same report in the new language
+  const hash = getHash();
+  if (hash && hash.lang === lang) {
+    loadReport(hash.date, lang, hash.report, false);
+    return;
+  }
+
+  // Find current date in nav or first date with any report in this language
+  const currentParts = currentKey ? currentKey.split('/') : [];
+  const currentDate = currentParts.length >= 2 ? currentParts[0] : null;
+  const currentReport = currentParts.length >= 3 ? currentParts[2] : null;
+
+  let targetDate = null;
+  let targetReport = null;
+
+  if (currentDate && currentReport) {
+    const dateEntry = manifestData.dates.find(d => d.date === currentDate);
+    if (dateEntry) {
+      const rep = dateEntry.reports.find(r => r.id === currentReport);
+      if (rep && rep.langs.includes(lang)) {
+        targetDate = currentDate;
+        targetReport = currentReport;
+      }
+    }
+  }
+
+  if (!targetDate) {
+    const first = manifestData.dates.find(d => d.reports.some(r => r.langs.includes(lang)));
+    if (first) {
+      targetDate = first.date;
+      targetReport = first.reports.find(r => r.langs.includes(lang))?.id;
+    }
+  }
+
+  if (targetDate && targetReport) {
+    history.replaceState(null, '', `#${targetDate}/${lang}/${targetReport}`);
+    loadReport(targetDate, lang, targetReport, false);
+  }
+}
+
+function setLang(lang) {
+  if (lang === currentLang || !manifestData?.langs[lang]) return;
+  currentLang = lang;
+  localStorage.setItem('ar-lang', lang);
+  rebuildUI();
+}
+
+langSelect.addEventListener('change', (e) => setLang(e.target.value));
+
+// ── Routing ──
+function getHash() {
+  const parts = location.hash.slice(1).split('/');
+  if (parts.length >= 3 && /^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
+    return { date: parts[0], lang: parts[1] || 'en', report: parts[2] };
+  }
+  if (parts.length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
+    return { date: parts[0], lang: currentLang, report: parts[1] };
+  }
+  return null;
+}
+
+// ── Search ──
 function applyDateSearch(query) {
   const needle = query.trim().toLowerCase();
   let hits = 0;
@@ -337,20 +474,21 @@ function applyDateSearch(query) {
   if (!needle) {
     setSearchStatus('');
   } else if (!searchReady) {
-    setSearchStatus('Building index…');
+    setSearchStatus(ui('searchBuilding', currentLang));
   } else {
-    setSearchStatus(`Matched ${hits} days`);
+    setSearchStatus(ui('searchMatched', currentLang)(hits));
   }
 }
 
-async function buildSearchIndex(dates) {
+async function buildSearchIndex(dates, lang) {
   const index = new Map();
   await Promise.all(
     dates.map(async ({ date, reports }) => {
       const chunks = await Promise.all(
-        reports.map(async (report) => {
+        reports.map(async (r) => {
+          if (!r.langs.includes(lang)) return '';
           try {
-            const res = await fetch(`./digests/${date}/${report}.md`);
+            const res = await fetch(`./digests/${date}/${reportFilename(r.id, lang)}`);
             if (!res.ok) return '';
             return await res.text();
           } catch {
@@ -364,11 +502,11 @@ async function buildSearchIndex(dates) {
   return index;
 }
 
-function initSearch(dates) {
+function initSearch(dates, lang) {
   searchReady = false;
-    setSearchStatus('Building index…');
+  setSearchStatus(ui('searchBuilding', lang));
 
-  buildSearchIndex(dates).then((index) => {
+  buildSearchIndex(dates, lang).then((index) => {
     searchIndex = index;
     searchReady = true;
     applyDateSearch(searchQuery);
@@ -386,8 +524,9 @@ function setContent(html) {
   document.getElementById('content').innerHTML = html;
 }
 
-async function loadReport(date, report, push = true) {
-  const key = `${date}/${report}`;
+// ── loadReport ──
+async function loadReport(date, lang, report, push = true) {
+  const key = `${date}/${lang}/${report}`;
   if (key === currentKey) return;
   currentKey = key;
 
@@ -408,23 +547,29 @@ async function loadReport(date, report, push = true) {
   document.getElementById('sidebar').classList.remove('open');
 
   const cwrap = document.getElementById('cwrap');
-      setContent('<div class="msg"><div class="msg-icon">⏳</div><div>Loading...</div></div>');
+  setContent(`<div class="msg"><div class="msg-icon">⏳</div><div>${ui('loading', lang)}</div></div>`);
   cwrap.scrollTop = 0;
 
   try {
-    const res = await fetch(`./digests/${date}/${report}.md`);
+    const filename = reportFilename(report, lang);
+    const res = await fetch(`./digests/${date}/${filename}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const raw = await res.text();
     const safe = renderMarkdown(raw);
     setContent(`<div class="md fade">${safe}</div>`);
   } catch (e) {
-    setContent(`<div class="msg"><div class="msg-icon">⚠️</div><div>Load failed: ${e.message}</div></div>`);
+    setContent(`<div class="msg"><div class="msg-icon">⚠️</div><div>${ui('loading', lang)}: ${e.message}</div></div>`);
   }
 }
 
-function buildNav(dates) {
+// ── buildNav ──
+function buildNav(dates, lang) {
   const nav = document.getElementById('nav');
   dates.forEach(({ date, reports }, i) => {
+    // Filter reports by language availability
+    const avail = reports.filter(r => r.langs.includes(lang));
+    if (!avail.length) return;
+
     const grp = document.createElement('div');
     grp.className = 'date-group' + (i === 0 ? ' open' : '');
     grp.dataset.date = date;
@@ -442,12 +587,12 @@ function buildNav(dates) {
     const list = document.createElement('div');
     list.className = 'rpt-list';
 
-    reports.forEach(r => {
+    avail.forEach(r => {
       const btn = document.createElement('button');
       btn.className = 'rpt-btn';
-      btn.dataset.key = `${date}/${r}`;
-      btn.textContent = LABELS[r] || r;
-      btn.onclick = () => loadReport(date, r);
+      btn.dataset.key = `${date}/${lang}/${r.id}`;
+      btn.textContent = reportLabel(r.id, lang);
+      btn.onclick = () => loadReport(date, lang, r.id);
       list.appendChild(btn);
     });
 
@@ -458,7 +603,10 @@ function buildNav(dates) {
 
 window.addEventListener('popstate', () => {
   const h = getHash();
-  if (h) loadReport(h.date, h.report, false);
+  if (h) {
+    currentLang = h.lang;
+    loadReport(h.date, h.lang, h.report, false);
+  }
 });
 
 // ── Init ──
@@ -466,25 +614,45 @@ window.addEventListener('popstate', () => {
   try {
     const res = await fetch('./manifest.json');
     if (!res.ok) throw new Error('manifest.json not found');
-    const { dates } = await res.json();
-    if (!dates?.length) throw new Error('manifest is empty');
+    const raw = await res.json();
+    manifestData = normalizeManifest(raw);
+    if (!manifestData.dates?.length) throw new Error('manifest is empty');
 
-    buildNav(dates);
-    initSearch(dates);
-
+    // Determine initial language
     const hash = getHash();
-    const first = dates[0];
-    if (hash && dates.find(d => d.date === hash.date && d.reports.includes(hash.report))) {
-      loadReport(hash.date, hash.report, false);
-    } else if (first?.reports?.length) {
-      const r0 = first.reports[0];
-      history.replaceState(null, '', `#${first.date}/${r0}`);
-      loadReport(first.date, r0, false);
+    const savedLang = localStorage.getItem('ar-lang');
+    let initLang = 'en';
+    if (hash && manifestData.langs[hash.lang]) {
+      initLang = hash.lang;
+    } else if (savedLang && manifestData.langs[savedLang]) {
+      initLang = savedLang;
+    }
+    currentLang = initLang;
+
+    rebuildUI();
+
+    // Load initial report from hash or first available
+    const h = getHash();
+    if (h && manifestData.langs[h.lang]) {
+      const dateEntry = manifestData.dates.find(d => d.date === h.date);
+      const rep = dateEntry?.reports.find(r => r.id === h.report);
+      if (rep && rep.langs.includes(h.lang)) {
+        loadReport(h.date, h.lang, h.report, false);
+        return;
+      }
+    }
+
+    // First report in current language
+    const first = manifestData.dates.find(d => d.reports.some(r => r.langs.includes(currentLang)));
+    if (first) {
+      const r0 = first.reports.find(r => r.langs.includes(currentLang));
+      history.replaceState(null, '', `#${first.date}/${currentLang}/${r0.id}`);
+      loadReport(first.date, currentLang, r0.id, false);
     }
   } catch (e) {
     document.getElementById('nav').innerHTML =
       '<div class="msg" style="height:80px;font-size:10px">⚠️ ' + e.message + '</div>';
-    setContent('<div class="msg"><div class="msg-icon">📡</div><div>Could not load manifest.json</div></div>');
+    setContent(`<div class="msg"><div class="msg-icon">📡</div><div>${ui('errorManifest', 'en')}</div></div>`);
   }
 })();
 </script>
