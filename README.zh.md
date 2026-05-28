@@ -189,7 +189,7 @@ openclaw_peers:
     repo: owner/my-agent
     name: My Agent
 ```
-> `config.yml` 顶部的 `languages` 字段控制启用的语言。默认值为 `["en", "zh"]`。完整的 21 种支持语言见本页顶部。
+> `config.yml` 顶部的 `languages` 字段控制启用的语言。默认值为 `["en", "zh"]`。如需添加更多语言，在列表中增加 ISO 代码即可（如 `["en", "zh", "ja", "ko"]`）。完整的 21 种支持语言见本页顶部。注意：每种启用的语言都会成倍增加每次运行的 LLM 调用次数，开启较多语言时请注意 API 费用。
 
 ### 3. 添加 Secrets
 
@@ -261,10 +261,10 @@ pnpm test:watch  # 开发模式下持续运行测试
 | `ai-trending{locale}.md` | GitHub AI 趋势热榜 — 按维度分类 + 趋势信号分析（仅在有数据时生成） | `trending{locale}` |
 | `ai-hn{locale}.md` | Hacker News AI 社区动态 — 热门帖子分类 + 情绪分析（仅在抓取成功时生成） | `hn{locale}` |
 
-其中 `{locale}` 对英语为空（如 `ai-cli.md`），对其他语言为 `-{code}`（如 `ai-cli-zh.md`、`ai-cli-ja.md`）。GitHub Issue 标签采用相同后缀（如 `digest`、`digest-zh`、`digest-ja`）。
+其中 `{locale}` 对英语为空（如 `ai-cli.md`），对其他语言为 `.{code}`（如 `ai-cli.zh.md`、`ai-cli.ja.md`）。GitHub Issue 标签采用相同后缀（如 `digest`、`digest-zh`、`digest-ja`）。
 
-例如，启用全部 21 种语言时，`digests/2026-05-28/` 将包含：
-- `ai-cli.md`（英文）、`ai-cli-zh.md`（中文）、`ai-cli-ja.md`（日文）、`ai-cli-es.md`（西班牙文）……
+例如，配置 `["en", "zh"]` 时，`digests/2026-05-28/` 将包含：
+- `ai-cli.md`（英文）、`ai-cli.zh.md`（中文）
 
 状态记录文件 `digests/web-state.json` 用于记录已处理的 URL，随每日简报一并提交。
 

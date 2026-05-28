@@ -348,7 +348,7 @@ function setSearchStatus(text) {
 }
 
 function reportFilename(reportId, lang) {
-  return lang === 'en' ? `${reportId}.md` : `${reportId}-${lang}.md`;
+  return lang === 'en' ? `${reportId}.md` : `${reportId}.${lang}.md`;
 }
 
 function reportLabel(reportId, lang) {

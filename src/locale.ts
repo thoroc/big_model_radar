@@ -12,7 +12,7 @@ import { t } from "./strings";
 
 /** Build a locale-suffixed report filename. English uses no suffix. */
 export const resolveFilename = (base: string, lang = "en"): string =>
-  lang === "en" ? `${base}.md` : `${base}-${lang}.md`;
+  lang === "en" ? `${base}.md` : `${base}.${lang}.md`;
 
 /** Build a locale-suffixed GitHub issue label. English uses no suffix. */
 export const resolveLabel = (base: string, lang = "en"): string => (lang === "en" ? base : `${base}-${lang}`);

@@ -190,7 +190,7 @@ openclaw_peers:
     name: My Agent
 ```
 
-> The `languages` field at the top of `config.yml` controls which locales are active. Defaults to `["en"]` if absent. See the full list of 21 supported languages at the top of this page.
+> The `languages` field at the top of `config.yml` controls which locales are active. Defaults to `["en", "zh"]` if absent. To enable additional languages, add their ISO codes to the list (e.g. `["en", "zh", "ja", "ko"]`). See the full list of 21 supported languages at the top of this page. Each enabled language multiplies the LLM calls per run — be mindful of API costs when enabling many languages.
 
 ### 3. Add Secrets
 
@@ -260,10 +260,10 @@ Files are written to `digests/YYYY-MM-DD/`. For each report type, the pipeline g
 | `ai-trending{locale}.md` | GitHub AI trending report — repos classified by dimension + trend signals (only written when data is available) | `trending{locale}` |
 | `ai-hn{locale}.md` | Hacker News AI community digest — top stories + sentiment analysis (only written when fetch succeeds) | `hn{locale}` |
 
-Where `{locale}` is empty for English (e.g. `ai-cli.md`) and `-{code}` for other languages (e.g. `ai-cli-zh.md`, `ai-cli-ja.md`). The same suffix applies to GitHub Issue labels (e.g. `digest`, `digest-zh`, `digest-ja`).
+Where `{locale}` is empty for English (e.g. `ai-cli.md`) and `.{code}` for other languages (e.g. `ai-cli.zh.md`, `ai-cli.ja.md`). The same suffix applies to GitHub Issue labels (e.g. `digest`, `digest-zh`, `digest-ja`).
 
-For example, with all 21 languages enabled, `digests/2026-05-28/` would contain:
-- `ai-cli.md` (English), `ai-cli-zh.md` (Chinese), `ai-cli-ja.md` (Japanese), `ai-cli-es.md` (Spanish), ...
+For example, with `["en", "zh"]` configured, `digests/2026-05-28/` would contain:
+- `ai-cli.md` (English), `ai-cli.zh.md` (Chinese)
 
 A shared state file `digests/web-state.json` tracks which web URLs have been seen; it is committed alongside the daily digests.
 

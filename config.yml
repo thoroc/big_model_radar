@@ -2,7 +2,7 @@
 # Edit this file to customize which repositories are tracked.
 # Changes take effect on the next workflow run.
 
-languages: ["en", "zh", "ja", "ko", "es", "pt", "fr", "de", "it", "pl", "ru", "ar", "tr", "vi", "th", "nl", "hi", "ro", "id", "uk", "bn"]
+languages: ["en", "zh"]
 
 # ── AI CLI tools ──────────────────────────────────────────────────────────────
 # Tracked for per-tool digests and cross-tool comparison.
