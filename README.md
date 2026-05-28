@@ -1,6 +1,10 @@
 # Big Model Radar
 
-English | [中文](./README.zh.md)
+**Supported languages**
+
+🇬🇧 English · 🇨🇳 中文 · 🇯🇵 日本語 · 🇰🇷 한국어 · 🇪🇸 Español · 🇧🇷 Português · 🇫🇷 Français · 🇩🇪 Deutsch · 🇮🇹 Italiano · 🇵🇱 Polski · 🇷🇺 Русский · 🇸🇦 العربية · 🇹🇷 Türkçe · 🇻🇳 Tiếng Việt · 🇹🇭 ไทย · 🇳🇱 Nederlands · 🇮🇳 हिन्दी · 🇷🇴 Română · 🇮🇩 Bahasa Indonesia · 🇺🇦 Українська · 🇧🇩 বাংলা
+
+English · [中文](./README.zh.md)
 
 A GitHub Actions workflow that runs every morning at 08:00 CST. It tracks GitHub activity from AI CLI tools, OpenClaw and its peer projects in the AI agent ecosystem, scrapes official news and research from Anthropic and OpenAI, and monitors the GitHub AI trending repos daily — then publishes English daily digests as GitHub Issues and committed Markdown files. Weekly and monthly rollup reports are also generated automatically.
 
@@ -162,7 +166,7 @@ New articles are detected by comparing sitemap `lastmod` timestamps against a pe
 - Publishes GitHub Issues for each report type; commits Markdown files to `digests/YYYY-MM-DD/`
 - Runs on a daily schedule via GitHub Actions; supports manual triggering
 - All tracked repositories are configurable via `config.yml` — no code changes needed
-- Centralized locale system via `src/strings.ts` — English-only `t()` catalog with `en` locale
+- Centralized locale system via `locales/*.json` — 21 supported languages with `t()` catalog in `src/strings.ts`
 
 ## Setup
 
@@ -186,7 +190,7 @@ openclaw_peers:
     name: My Agent
 ```
 
-> The `languages` field at the top of `config.yml` controls which locales are active. Defaults to `["en"]` if absent. Currently only `"en"` is supported.
+> The `languages` field at the top of `config.yml` controls which locales are active. Defaults to `["en"]` if absent. See the full list of 21 supported languages at the top of this page.
 
 ### 3. Add Secrets
 
