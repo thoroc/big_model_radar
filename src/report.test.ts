@@ -12,7 +12,8 @@ vi.mock("node:fs", () => {
 });
 
 import fs from "node:fs";
-import { autoGenFooter, hasLlmCredentials, saveFile } from "./report";
+import { hasLlmCredentials, saveFile } from "./report";
+import { autoGenFooter } from "./locale";
 
 describe("autoGenFooter", () => {
   afterEach(() => {

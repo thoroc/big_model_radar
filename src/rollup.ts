@@ -5,7 +5,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { callLlm, saveFile, autoGenFooter } from "./report.ts";
+import { callLlm, saveFile } from "./report.ts";
+import { autoGenFooter } from "./locale.ts";
 import { buildWeeklyPrompt, buildMonthlyPrompt } from "./prompts.ts";
 import { createGitHubIssue } from "./github.ts";
 import { t } from "./strings.ts";

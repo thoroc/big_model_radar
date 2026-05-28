@@ -23,7 +23,6 @@ import {
 } from "./github.ts";
 import {
   type RepoDigest,
-  LANGUAGE_NAMES,
   buildCliPrompt,
   buildPeerPrompt,
   buildComparisonPrompt,
@@ -33,12 +32,13 @@ import {
   buildTrendingPrompt,
   buildHnPrompt,
 } from "./prompts.ts";
-import { callLlm, saveFile, autoGenFooter, getLlmBaseUrl, hasLlmCredentials } from "./report.ts";
+import { callLlm, saveFile, getLlmBaseUrl, hasLlmCredentials } from "./report.ts";
 import { loadWebState, saveWebState, fetchSiteContent, type WebFetchResult, type WebState } from "./web.ts";
 import { fetchTrendingData, type TrendingData } from "./trending.ts";
 import { fetchHnData, type HnData } from "./hn.ts";
 import { loadConfig, getEnabledLangs } from "./config.ts";
 import { t, validateLocale } from "./strings.ts";
+import { LANGUAGE_NAMES, resolveFilename, resolveLabel, autoGenFooter } from "./locale.ts";
 
 // ---------------------------------------------------------------------------
 // Repo config — loaded from config.yml, falls back to built-in defaults
@@ -395,15 +395,14 @@ async function saveWebReport(
         webSummary +
         footer;
 
-      const suffix = lang === "en" ? "" : `-${lang}`;
-      console.log(`  Saved ${saveFile(webContent, dateStr, `ai-web${suffix}.md`)}`);
+      console.log(`  Saved ${saveFile(webContent, dateStr, resolveFilename("ai-web", lang))}`);
 
       if (digestRepo) {
         const webIssueTitle = `${s.issueWebTitle} ${dateStr}${isFirstRun ? " (First Crawl)" : ""}`;
         const webUrl = await createGitHubIssue(
           webIssueTitle,
           webContent,
-          `${s.issueLabelWeb}${suffix}`,
+          resolveLabel(s.issueLabelWeb, lang),
           lang,
         );
         console.log(`  Created web issue: ${webUrl}`);
@@ -442,14 +441,13 @@ async function saveTrendingReport(
     trendingSummary +
     footer;
 
-  const suffix = lang === "en" ? "" : `-${lang}`;
-  console.log(`  Saved ${saveFile(trendingContent, dateStr, `ai-trending${suffix}.md`)}`);
+  console.log(`  Saved ${saveFile(trendingContent, dateStr, resolveFilename("ai-trending", lang))}`);
 
   if (digestRepo) {
     const trendingUrl = await createGitHubIssue(
       `${s.issueTrendingTitle} ${dateStr}`,
       trendingContent,
-      `${s.issueLabelTrending}${suffix}`,
+      resolveLabel(s.issueLabelTrending, lang),
       lang,
     );
     console.log(`  Created trending issue: ${trendingUrl}`);
@@ -481,14 +479,13 @@ async function saveHnReport(
       hnSummary +
       footer;
 
-    const suffix = lang === "en" ? "" : `-${lang}`;
-    console.log(`  Saved ${saveFile(hnContent, dateStr, `ai-hn${suffix}.md`)}`);
+    console.log(`  Saved ${saveFile(hnContent, dateStr, resolveFilename("ai-hn", lang))}`);
 
     if (digestRepo) {
       const hnUrl = await createGitHubIssue(
         `${s.issueHnTitle} ${dateStr}`,
         hnContent,
-        `${s.issueLabelHn}${suffix}`,
+        resolveLabel(s.issueLabelHn, lang),
         lang,
       );
       console.log(`  Created HN issue: ${hnUrl}`);
@@ -581,9 +578,8 @@ async function main(): Promise<void> {
     );
 
     // Save with locale-suffixed filenames
-    const suffix = lang === "en" ? "" : `-${lang}`;
-    console.log(`  Saved ${saveFile(digestContent, dateStr, `ai-cli${suffix}.md`)}`);
-    console.log(`  Saved ${saveFile(openclawContent, dateStr, `ai-agents${suffix}.md`)}`);
+    console.log(`  Saved ${saveFile(digestContent, dateStr, resolveFilename("ai-cli", lang))}`);
+    console.log(`  Saved ${saveFile(openclawContent, dateStr, resolveFilename("ai-agents", lang))}`);
 
     // Create GitHub issues with locale-appropriate labels
     if (digestRepo) {
@@ -591,14 +587,14 @@ async function main(): Promise<void> {
       const cliUrl = await createGitHubIssue(
         `${s.issueCliTitle} ${dateStr}`,
         digestContent,
-        `${s.issueLabelDigest}${suffix}`,
+        resolveLabel(s.issueLabelDigest, lang),
         lang,
       );
       console.log(`  Created CLI issue: ${cliUrl}`);
       const openclawUrl = await createGitHubIssue(
         `${s.issueOpenclawTitle} ${dateStr}`,
         openclawContent,
-        `${s.issueLabelOpenclaw}${suffix}`,
+        resolveLabel(s.issueLabelOpenclaw, lang),
         lang,
       );
       console.log(`  Created OpenClaw issue: ${openclawUrl}`);

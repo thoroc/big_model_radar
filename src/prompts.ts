@@ -7,30 +7,7 @@ import type { WebFetchResult } from "./web.ts";
 import type { TrendingData } from "./trending.ts";
 import type { HnData } from "./hn.ts";
 import { t } from "./strings.ts";
-
-export const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  zh: "Chinese",
-  ja: "Japanese",
-  ko: "Korean",
-  es: "Spanish",
-  pt: "Portuguese",
-  fr: "French",
-  de: "German",
-  it: "Italian",
-  pl: "Polish",
-  ru: "Russian",
-  ar: "Arabic",
-  tr: "Turkish",
-  vi: "Vietnamese",
-  th: "Thai",
-  nl: "Dutch",
-  hi: "Hindi",
-  ro: "Romanian",
-  id: "Indonesian",
-  uk: "Ukrainian",
-  bn: "Bengali",
-};
+import { LANGUAGE_NAMES } from "./locale.ts";
 
 // ---------------------------------------------------------------------------
 // Types
