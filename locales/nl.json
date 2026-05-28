@@ -7,7 +7,7 @@
   "webNoNewContent": "Geen nieuwe inhoud gevonden.",
   "webFetchFailed": "⚠️ Webinhoud ophalen mislukt.",
   "hnFetchFailed": "⚠️ HN-gegevens ophalen mislukt.",
-  "cliTitle": "AI CLI Tools Community Digest",
+  "cliTitle": "AI CLI Tools Communityoverzicht",
   "cliMeta": "> Gegenereerd: {utcStr} UTC | Gedekte tools: {count}",
   "cliSkillsHeading": "## Claude Code Vaardigheden Hoogtepunten",
   "cliSkillsSource": "> Bron: [{repo}](https://github.com/{repo})",

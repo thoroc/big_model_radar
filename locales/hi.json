@@ -49,7 +49,7 @@
   "sampleNote": "(कुल: {total} आइटम; टिप्पणी गणना के अनुसार शीर्ष {sampled} दिखा रहे हैं)",
   "noneStr": "कोई नहीं",
   "unableToExtract": "(पाठ्य सामग्री निकालने में असमर्थ)",
-  "issueTruncation": "\n\n---\n> ⚠️ 内容超过 GitHub Issue 上限，完整报告见提交的 Markdown 文件。",
+  "issueTruncation": "\n\n---\n> ⚠️ सामग्री GitHub Issue सीमा से अधिक है। पूर्ण रिपोर्ट के लिए प्रतिबद्ध Markdown फ़ाइल देखें।",
   "weeklyTitle": "AI टूल्स इकोसिस्टम साप्ताहिक रिपोर्ट",
   "weeklyMeta": "> कवरेज: {range} | निर्मित: {utcStr} UTC",
   "monthlyTitle": "AI टूल्स इकोसिस्टम मासिक रिपोर्ट",

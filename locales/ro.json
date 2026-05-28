@@ -49,7 +49,7 @@
   "sampleNote": "(Total: {total} elemente; se afișează primele {sampled} după numărul de comentarii)",
   "noneStr": "Niciunul",
   "unableToExtract": "(Nu s-a putut extrage conținutul textului)",
-  "issueTruncation": "\n\n---\n> ⚠️ 内容超过 GitHub Issue 上限，完整报告见提交的 Markdown 文件。",
+  "issueTruncation": "\n\n---\n> ⚠️ Conținutul depășește limita GitHub Issue. Consultați fișierul Markdown comis pentru raportul complet.",
   "weeklyTitle": "Raport Săptămânal al Ecosistemului de Instrumente AI",
   "weeklyMeta": "> Acoperire: {range} | Generat: {utcStr} UTC",
   "monthlyTitle": "Raport Lunar al Ecosistemului de Instrumente AI",

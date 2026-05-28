@@ -49,7 +49,7 @@
   "sampleNote": "(Total: {total} item; menampilkan {sampled} teratas berdasarkan jumlah komentar)",
   "noneStr": "Tidak Ada",
   "unableToExtract": "(Tidak dapat mengekstrak konten teks)",
-  "issueTruncation": "\n\n---\n> ⚠️ 内容超过 GitHub Issue 上限，完整报告见提交的 Markdown 文件。",
+  "issueTruncation": "\n\n---\n> ⚠️ Konten melebihi batas GitHub Issue. Lihat file Markdown yang telah dikomit untuk laporan lengkap.",
   "weeklyTitle": "Laporan Mingguan Ekosistem Alat AI",
   "weeklyMeta": "> Cakupan: {range} | Dibuat: {utcStr} UTC",
   "monthlyTitle": "Laporan Bulanan Ekosistem Alat AI",

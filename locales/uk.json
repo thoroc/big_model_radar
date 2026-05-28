@@ -49,7 +49,7 @@
   "sampleNote": "(Всього: {total} елементів; показано top {sampled} за кількістю коментарів)",
   "noneStr": "Немає",
   "unableToExtract": "(Не вдалося витягнути текстовий вміст)",
-  "issueTruncation": "\n\n---\n> ⚠️ 内容超过 GitHub Issue 上限，完整报告见提交的 Markdown 文件。",
+  "issueTruncation": "\n\n---\n> ⚠️ Вміст перевищує ліміт GitHub Issue. Повний звіт дивіться у закоміченому файлі Markdown.",
   "weeklyTitle": "Щотижневий звіт екосистеми AI інструментів",
   "weeklyMeta": "> Охоплення: {range} | Створено: {utcStr} UTC",
   "monthlyTitle": "Щомісячний звіт екосистеми AI інструментів",

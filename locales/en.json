@@ -49,7 +49,7 @@
   "sampleNote": "(Total: {total} items; showing top {sampled} by comment count)",
   "noneStr": "None",
   "unableToExtract": "(Unable to extract text content)",
-  "issueTruncation": "\n\n---\n> ⚠️ 内容超过 GitHub Issue 上限，完整报告见提交的 Markdown 文件。",
+  "issueTruncation": "\n\n---\n> ⚠️ Content exceeds the GitHub Issue limit. See the committed Markdown file for the full report.",
   "weeklyTitle": "AI Tools Ecosystem Weekly Report",
   "weeklyMeta": "> Coverage: {range} | Generated: {utcStr} UTC",
   "monthlyTitle": "AI Tools Ecosystem Monthly Report",
