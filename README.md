@@ -6,7 +6,7 @@
 
 English · [中文](./README.zh.md)
 
-A GitHub Actions workflow that runs every morning at 08:00 CST. It tracks GitHub activity from AI CLI tools, OpenClaw and its peer projects in the AI agent ecosystem, scrapes official news and research from Anthropic and OpenAI, and monitors the GitHub AI trending repos daily — then publishes English daily digests as GitHub Issues and committed Markdown files. Weekly and monthly rollup reports are also generated automatically.
+A GitHub Actions workflow that runs every morning at 08:00 CST. It tracks GitHub activity from AI CLI tools, OpenClaw and its peer projects in the AI agent ecosystem, scrapes official news and research from Anthropic and OpenAI, and monitors the GitHub AI trending repos daily — then publishes daily digests (in all configured languages) as GitHub Issues and committed Markdown files. Weekly and monthly rollup reports are also generated automatically.
 
 ## Web UI
 
@@ -375,7 +375,7 @@ Top projects & releases
 Looking ahead
 ```
 
-Historical digests are stored in [`digests/`](./digests/). Published issues are tagged by type: [`digest`](../../issues?label=digest) · [`openclaw`](../../issues?label=openclaw) · [`web`](../../issues?label=web) · [`trending`](../../issues?label=trending) · [`hn`](../../issues?label=hn) · [`weekly`](../../issues?label=weekly) · [`monthly`](../../issues?label=monthly).
+Historical digests are stored in [`digests/`](./digests/). Published issues are tagged by type: [`digest`](../../issues?label=digest) · [`openclaw`](../../issues?label=openclaw) · [`web`](../../issues?label=web) · [`trending`](../../issues?label=trending) · [`hn`](../../issues?label=hn) · [`weekly`](../../issues?label=weekly) · [`monthly`](../../issues?label=monthly). Non-English reports use locale-suffixed labels (e.g. `digest-zh`, `digest-ja`).
 
 ## Schedule
 
