@@ -73,5 +73,9 @@
   "notifyWeekly": "AI Tools Weekly",
   "notifyMonthly": "AI Tools Monthly",
   "notifyFooter": "",
-  "autoGenFooter": ""
+  "autoGenFooter": "",
+  "_meta": {
+    "name": "English",
+    "nativeName": "English"
+  }
 }

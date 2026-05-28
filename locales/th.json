@@ -73,5 +73,9 @@
   "notifyWeekly": "เครื่องมือ AI รายสัปดาห์",
   "notifyMonthly": "เครื่องมือ AI รายเดือน",
   "notifyFooter": "ขับเคลื่อนโดย Big Model Radar",
-  "autoGenFooter": "สร้างโดยอัตโนมัติด้วย Big Model Radar"
+  "autoGenFooter": "สร้างโดยอัตโนมัติด้วย Big Model Radar",
+  "_meta": {
+    "name": "Thai",
+    "nativeName": "ไทย"
+  }
 }

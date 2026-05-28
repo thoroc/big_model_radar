@@ -7,34 +7,6 @@
 import { t } from "./strings";
 
 // ---------------------------------------------------------------------------
-// Language names (used in LLM prompts to tell the model which language to use)
-// ---------------------------------------------------------------------------
-
-export const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  zh: "Chinese",
-  ja: "Japanese",
-  ko: "Korean",
-  es: "Spanish",
-  pt: "Portuguese",
-  fr: "French",
-  de: "German",
-  it: "Italian",
-  pl: "Polish",
-  ru: "Russian",
-  ar: "Arabic",
-  tr: "Turkish",
-  vi: "Vietnamese",
-  th: "Thai",
-  nl: "Dutch",
-  hi: "Hindi",
-  ro: "Romanian",
-  id: "Indonesian",
-  uk: "Ukrainian",
-  bn: "Bengali",
-};
-
-// ---------------------------------------------------------------------------
 // Filename / label suffix helpers
 // ---------------------------------------------------------------------------
 

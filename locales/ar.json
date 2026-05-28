@@ -73,5 +73,9 @@
   "notifyWeekly": "أدوات الذكاء الاصطناعي أسبوعياً",
   "notifyMonthly": "أدوات الذكاء الاصطناعي شهرياً",
   "notifyFooter": "مدعوم من Big Model Radar",
-  "autoGenFooter": "تم الإنشاء تلقائياً بواسطة Big Model Radar"
+  "autoGenFooter": "تم الإنشاء تلقائياً بواسطة Big Model Radar",
+  "_meta": {
+    "name": "Arabic",
+    "nativeName": "العربية"
+  }
 }

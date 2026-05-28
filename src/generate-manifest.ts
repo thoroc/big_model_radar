@@ -17,17 +17,24 @@ export const REPORT_FILES = [
 ] as const;
 const MAX_FEED_ITEMS = 30;
 
+const FALLBACK_LABELS: Record<string, string> = {
+  "ai-cli": "AI CLI Tools Digest",
+  "ai-agents": "AI Agents Ecosystem Digest",
+  "ai-web": "Official AI Content Report",
+  "ai-trending": "AI Open Source Trends",
+  "ai-hn": "Hacker News AI Community Digest",
+  "ai-weekly": "AI Tools Weekly Digest",
+  "ai-monthly": "AI Tools Monthly Digest",
+};
+
 export const buildReportLabels = (lang = "en"): Record<string, string> => {
   const s = t(lang);
-  return {
-    "ai-cli": s.manifestCli,
-    "ai-agents": s.manifestAgents,
-    "ai-web": s.manifestWeb,
-    "ai-trending": s.manifestTrending,
-    "ai-hn": s.manifestHn,
-    "ai-weekly": s.manifestWeekly,
-    "ai-monthly": s.manifestMonthly,
-  };
+  return Object.fromEntries(
+    Object.keys(FALLBACK_LABELS).map((key) => [
+      key,
+      (s as Record<string, string>)[key] || FALLBACK_LABELS[key],
+    ]),
+  ) as Record<string, string>;
 };
 
 export const REPORT_LABELS: Record<string, string> = buildReportLabels();

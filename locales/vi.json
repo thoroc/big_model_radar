@@ -73,5 +73,9 @@
   "notifyWeekly": "Công Cụ AI Hàng Tuần",
   "notifyMonthly": "Công Cụ AI Hàng Tháng",
   "notifyFooter": "Được hỗ trợ bởi Big Model Radar",
-  "autoGenFooter": "Được tạo tự động bởi Big Model Radar"
+  "autoGenFooter": "Được tạo tự động bởi Big Model Radar",
+  "_meta": {
+    "name": "Vietnamese",
+    "nativeName": "Tiếng Việt"
+  }
 }

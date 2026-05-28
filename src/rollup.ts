@@ -37,7 +37,8 @@ export function readDailyDigest(date: string, lang = "en"): string | null {
     if (fs.existsSync(p)) {
       const content = fs.readFileSync(p, "utf-8");
       const truncated = content.slice(0, MAX_CHARS_PER_REPORT);
-      return truncated.length < content.length ? truncated + "\n" + t(lang).digestTruncation : truncated;
+      const digestTruncation = t(lang).digestTruncation || "...[truncated]";
+      return truncated.length < content.length ? truncated + "\n" + digestTruncation : truncated;
     }
   }
   return null;

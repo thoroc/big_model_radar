@@ -73,5 +73,9 @@
   "notifyWeekly": "AIツール週刊",
   "notifyMonthly": "AIツール月間",
   "notifyFooter": "Powered by Big Model Radar",
-  "autoGenFooter": "Powered by Big Model Radar"
+  "autoGenFooter": "Powered by Big Model Radar",
+  "_meta": {
+    "name": "Japanese",
+    "nativeName": "日本語"
+  }
 }

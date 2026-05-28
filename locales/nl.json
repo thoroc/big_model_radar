@@ -73,5 +73,9 @@
   "notifyWeekly": "AI Tools Wekelijks",
   "notifyMonthly": "AI Tools Maandelijks",
   "notifyFooter": "Mogelijk gemaakt door Big Model Radar",
-  "autoGenFooter": "Automatisch gegenereerd door Big Model Radar"
+  "autoGenFooter": "Automatisch gegenereerd door Big Model Radar",
+  "_meta": {
+    "name": "Dutch",
+    "nativeName": "Nederlands"
+  }
 }

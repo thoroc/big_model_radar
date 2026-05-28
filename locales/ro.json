@@ -73,5 +73,9 @@
   "notifyWeekly": "Instrumente AI Săptămânal",
   "notifyMonthly": "Instrumente AI Lunar",
   "notifyFooter": "",
-  "autoGenFooter": ""
+  "autoGenFooter": "",
+  "_meta": {
+    "name": "Romanian",
+    "nativeName": "Română"
+  }
 }

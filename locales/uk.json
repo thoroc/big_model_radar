@@ -73,5 +73,9 @@
   "notifyWeekly": "AI інструменти щотижня",
   "notifyMonthly": "AI інструменти щомісяця",
   "notifyFooter": "",
-  "autoGenFooter": ""
+  "autoGenFooter": "",
+  "_meta": {
+    "name": "Ukrainian",
+    "nativeName": "Українська"
+  }
 }

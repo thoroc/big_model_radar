@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { SUPPORTED_LOCALES } from "./strings";
-import { LANGUAGE_NAMES, resolveFilename, resolveLabel, autoGenFooter } from "./locale";
+import { t, SUPPORTED_LOCALES, LANGUAGE_NAMES } from "./strings";
+import { resolveFilename, resolveLabel, autoGenFooter } from "./locale";
 
 describe("LANGUAGE_NAMES", () => {
   it("maps every SUPPORTED_LOCALES code to a name", () => {
+    t(); // ensure locales are loaded
     for (const code of SUPPORTED_LOCALES) {
       const name = LANGUAGE_NAMES[code];
       expect(name).toBeDefined();
@@ -59,13 +60,5 @@ describe("autoGenFooter", () => {
     vi.stubEnv("DIGEST_REPO", "owner/repo");
     const result = autoGenFooter("zh");
     expect(result).toContain("由 Big Model Radar 自动生成");
-  });
-});
-
-describe("SUPPORTED_LOCALES coverage", () => {
-  it("LANGUAGE_NAMES covers every SUPPORTED_LOCALES code", () => {
-    for (const code of SUPPORTED_LOCALES) {
-      expect(LANGUAGE_NAMES[code]).toBeDefined();
-    }
   });
 });

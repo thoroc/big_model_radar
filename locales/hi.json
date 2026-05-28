@@ -73,5 +73,9 @@
   "notifyWeekly": "AI टूल्स साप्ताहिक",
   "notifyMonthly": "AI टूल्स मासिक",
   "notifyFooter": "",
-  "autoGenFooter": ""
+  "autoGenFooter": "",
+  "_meta": {
+    "name": "Hindi",
+    "nativeName": "हिन्दी"
+  }
 }

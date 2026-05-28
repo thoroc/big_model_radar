@@ -73,5 +73,9 @@
   "notifyWeekly": "Outils IA Hebdo",
   "notifyMonthly": "Outils IA Mensuel",
   "notifyFooter": "Powered by Big Model Radar",
-  "autoGenFooter": "Powered by Big Model Radar"
+  "autoGenFooter": "Powered by Big Model Radar",
+  "_meta": {
+    "name": "French",
+    "nativeName": "Français"
+  }
 }

@@ -37,8 +37,8 @@ import { loadWebState, saveWebState, fetchSiteContent, type WebFetchResult, type
 import { fetchTrendingData, type TrendingData } from "./trending.ts";
 import { fetchHnData, type HnData } from "./hn.ts";
 import { loadConfig, getEnabledLangs } from "./config.ts";
-import { t, validateLocale } from "./strings.ts";
-import { LANGUAGE_NAMES, resolveFilename, resolveLabel, autoGenFooter } from "./locale.ts";
+import { t, validateLocale, LANGUAGE_NAMES } from "./strings.ts";
+import { resolveFilename, resolveLabel, autoGenFooter } from "./locale.ts";
 
 // ---------------------------------------------------------------------------
 // Repo config — loaded from config.yml, falls back to built-in defaults

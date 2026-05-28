@@ -73,5 +73,9 @@
   "notifyWeekly": "AI 工具周报",
   "notifyMonthly": "AI 工具月报",
   "notifyFooter": "由 Big Model Radar 驱动",
-  "autoGenFooter": "由 Big Model Radar 自动生成"
+  "autoGenFooter": "由 Big Model Radar 自动生成",
+  "_meta": {
+    "name": "Chinese",
+    "nativeName": "中文"
+  }
 }

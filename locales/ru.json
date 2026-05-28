@@ -73,5 +73,9 @@
   "notifyWeekly": "AI-инструменты еженедельно",
   "notifyMonthly": "AI-инструменты ежемесячно",
   "notifyFooter": "Работает на Big Model Radar",
-  "autoGenFooter": "Автоматически создано Big Model Radar"
+  "autoGenFooter": "Автоматически создано Big Model Radar",
+  "_meta": {
+    "name": "Russian",
+    "nativeName": "Русский"
+  }
 }

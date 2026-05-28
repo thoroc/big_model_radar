@@ -73,5 +73,9 @@
   "notifyWeekly": "Alat AI Mingguan",
   "notifyMonthly": "Alat AI Bulanan",
   "notifyFooter": "",
-  "autoGenFooter": ""
+  "autoGenFooter": "",
+  "_meta": {
+    "name": "Indonesian",
+    "nativeName": "Bahasa Indonesia"
+  }
 }

@@ -1,158 +1,82 @@
-export interface LocaleStrings {
-  noActivity: string;
-  summaryFailed: string;
-  skillsFailed: string;
-  trendingNoData: string;
-  trendingFailed: string;
-  webNoNewContent: string;
-  webFetchFailed: string;
-  hnFetchFailed: string;
-  cliTitle: string;
-  cliMeta: string;
-  cliSkillsHeading: string;
-  cliSkillsSource: string;
-  cliComparison: string;
-  cliDetail: string;
-  openclawTitle: string;
-  openclawMeta: string;
-  openclawDeepDive: string;
-  openclawComparison: string;
-  openclawPeers: string;
-  webTitle: string;
-  webMeta: string;
-  webSources: string;
-  trendingTitle: string;
-  trendingMeta: string;
-  hnTitle: string;
-  hnMeta: string;
-  issueCliTitle: string;
-  issueOpenclawTitle: string;
-  issueWebTitle: string;
-  issueTrendingTitle: string;
-  issueHnTitle: string;
-  issueLabelDigest: string;
-  issueLabelOpenclaw: string;
-  issueLabelWeb: string;
-  issueLabelTrending: string;
-  issueLabelHn: string;
-  fileSuffixCli: string;
-  fileSuffixOpenclaw: string;
-  fileSuffixWeb: string;
-  fileSuffixTrending: string;
-  fileSuffixHn: string;
-  formatItemAuthor: string;
-  formatItemCreated: string;
-  formatItemUpdated: string;
-  formatItemComments: string;
-  formatItemUrl: string;
-  formatItemSummary: string;
-  sampleNote: string;
-  noneStr: string;
-  unableToExtract: string;
-  issueTruncation: string;
-  weeklyTitle: string;
-  weeklyMeta: string;
-  monthlyTitle: string;
-  monthlyMeta: string;
-  sourceLabelWeekly: string;
-  sourceLabelDailySampled: string;
-  digestTruncation: string;
-  weeklyTruncation: string;
-  manifestCli: string;
-  manifestAgents: string;
-  manifestWeb: string;
-  manifestTrending: string;
-  manifestHn: string;
-  manifestWeekly: string;
-  manifestMonthly: string;
-  notifyCli: string;
-  notifyAgents: string;
-  notifyWeb: string;
-  notifyTrending: string;
-  notifyHn: string;
-  notifyWeekly: string;
-  notifyMonthly: string;
-  notifyFooter: string;
-  autoGenFooter: string;
+/**
+ * Locale data loader — reads all JSON files from locales/, validates them
+ * with a Zod schema, and exports the parsed data, supported locales list,
+ * language names, and the t() translation accessor.
+ *
+ * Initialization is lazy (deferred until first t() or validateLocale call)
+ * so that tests mocking node:fs can set up their mocks first.
+ *
+ * If loading fails (e.g. in tests with mocked fs), t() returns a proxy that
+ * yields empty strings for every key — no undefined crashes.
+ *
+ * Adding a new language = drop a valid JSON file into locales/.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { LocaleFileSchema, type LocaleData } from "./locale-schema";
+
+type LocaleStrings = LocaleData;
+
+// ---------------------------------------------------------------------------
+// Lazy initializer
+// ---------------------------------------------------------------------------
+
+let _initialized = false;
+
+export const SUPPORTED_LOCALES: string[] = [];
+export const STRINGS: Record<string, LocaleStrings> = {};
+export const LANGUAGE_NAMES: Record<string, string> = {};
+
+function ensureLocales(): void {
+  if (_initialized) return;
+  _initialized = true;
+
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const localesDir = path.resolve(__dirname, "../locales");
+
+    if (!fs.existsSync(localesDir)) {
+      console.warn(`[strings] locales directory not found: ${localesDir}`);
+      return;
+    }
+
+    const files = fs.readdirSync(localesDir).filter((f) => f.endsWith(".json"));
+    for (const file of files) {
+      const code = path.basename(file, ".json");
+      const raw = JSON.parse(fs.readFileSync(path.join(localesDir, file), "utf-8"));
+      const parsed = LocaleFileSchema.parse(raw);
+      const { _meta, ...data } = parsed;
+      STRINGS[code] = data;
+      LANGUAGE_NAMES[code] = _meta.name;
+      SUPPORTED_LOCALES.push(code);
+    }
+  } catch (err) {
+    console.warn(`[strings] Failed to load locales: ${err}`);
+  }
 }
 
-import en from "../locales/en.json";
-import zh from "../locales/zh.json";
-import ja from "../locales/ja.json";
-import ko from "../locales/ko.json";
-import es from "../locales/es.json";
-import pt from "../locales/pt.json";
-import fr from "../locales/fr.json";
-import de from "../locales/de.json";
-import it from "../locales/it.json";
-import pl from "../locales/pl.json";
-import ru from "../locales/ru.json";
-import ar from "../locales/ar.json";
-import tr from "../locales/tr.json";
-import vi from "../locales/vi.json";
-import th from "../locales/th.json";
-import nl from "../locales/nl.json";
-import hi from "../locales/hi.json";
-import ro from "../locales/ro.json";
-import id from "../locales/id.json";
-import uk from "../locales/uk.json";
-import bn from "../locales/bn.json";
+// ---------------------------------------------------------------------------
+// Fallback — used when locale files can't be loaded (e.g. in tests)
+// ---------------------------------------------------------------------------
 
-export const STRINGS: Record<string, LocaleStrings> = {
-  en: en as LocaleStrings,
-  zh: zh as LocaleStrings,
-  ja: ja as LocaleStrings,
-  ko: ko as LocaleStrings,
-  es: es as LocaleStrings,
-  pt: pt as LocaleStrings,
-  fr: fr as LocaleStrings,
-  de: de as LocaleStrings,
-  it: it as LocaleStrings,
-  pl: pl as LocaleStrings,
-  ru: ru as LocaleStrings,
-  ar: ar as LocaleStrings,
-  tr: tr as LocaleStrings,
-  vi: vi as LocaleStrings,
-  th: th as LocaleStrings,
-  nl: nl as LocaleStrings,
-  hi: hi as LocaleStrings,
-  ro: ro as LocaleStrings,
-  id: id as LocaleStrings,
-  uk: uk as LocaleStrings,
-  bn: bn as LocaleStrings,
-};
+const EMPTY_FALLBACK = new Proxy({} as LocaleStrings, { get: () => "" });
 
-export const SUPPORTED_LOCALES = [
-  "en",
-  "zh",
-  "ja",
-  "ko",
-  "es",
-  "pt",
-  "fr",
-  "de",
-  "it",
-  "pl",
-  "ru",
-  "ar",
-  "tr",
-  "vi",
-  "th",
-  "nl",
-  "hi",
-  "ro",
-  "id",
-  "uk",
-  "bn",
-] as const;
+// ---------------------------------------------------------------------------
+// Accessors
+// ---------------------------------------------------------------------------
 
 export const validateLocale = (lang: string): string => {
-  if (SUPPORTED_LOCALES.includes(lang as (typeof SUPPORTED_LOCALES)[number])) return lang;
+  ensureLocales();
+  if (SUPPORTED_LOCALES.includes(lang)) return lang;
   console.warn(`Unsupported locale "${lang}", falling back to "en"`);
   return "en";
 };
 
 export const t = (lang?: string): LocaleStrings => {
+  ensureLocales();
   const locale = lang ? validateLocale(lang) : "en";
-  return (STRINGS[locale] ?? STRINGS.en) as LocaleStrings;
+  return STRINGS[locale] ?? STRINGS.en ?? EMPTY_FALLBACK;
 };

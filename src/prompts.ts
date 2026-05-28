@@ -7,7 +7,7 @@ import type { WebFetchResult } from "./web.ts";
 import type { TrendingData } from "./trending.ts";
 import type { HnData } from "./hn.ts";
 import { t } from "./strings.ts";
-import { LANGUAGE_NAMES } from "./locale.ts";
+import { LANGUAGE_NAMES } from "./strings.ts";
 
 // ---------------------------------------------------------------------------
 // Types

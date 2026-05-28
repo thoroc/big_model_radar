@@ -73,5 +73,9 @@
   "notifyWeekly": "AI টুলস সাপ্তাহিক",
   "notifyMonthly": "AI টুলস মাসিক",
   "notifyFooter": "",
-  "autoGenFooter": ""
+  "autoGenFooter": "",
+  "_meta": {
+    "name": "Bengali",
+    "nativeName": "বাংলা"
+  }
 }

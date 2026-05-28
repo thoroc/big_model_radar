@@ -58,7 +58,7 @@ const DEFAULT_OPENCLAW: RepoConfig = {
   paginated: true,
 };
 
-export const DEFAULT_LANGUAGES = [
+export const DEFAULT_LANGUAGES: string[] = [
   "en",
   "zh",
   "ja",

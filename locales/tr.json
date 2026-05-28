@@ -73,5 +73,9 @@
   "notifyWeekly": "AI Araçları Haftalık",
   "notifyMonthly": "AI Araçları Aylık",
   "notifyFooter": "Big Model Radar tarafından desteklenmektedir",
-  "autoGenFooter": "Big Model Radar tarafından otomatik oluşturulmuştur"
+  "autoGenFooter": "Big Model Radar tarafından otomatik oluşturulmuştur",
+  "_meta": {
+    "name": "Turkish",
+    "nativeName": "Türkçe"
+  }
 }

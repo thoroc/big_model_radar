@@ -73,5 +73,9 @@
   "notifyWeekly": "Herramientas de IA Semanal",
   "notifyMonthly": "Herramientas de IA Mensual",
   "notifyFooter": "Powered by Big Model Radar",
-  "autoGenFooter": "Powered by Big Model Radar"
+  "autoGenFooter": "Powered by Big Model Radar",
+  "_meta": {
+    "name": "Spanish",
+    "nativeName": "Español"
+  }
 }
