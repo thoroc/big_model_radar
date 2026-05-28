@@ -19,10 +19,10 @@ describe("resolveFilename", () => {
     expect(resolveFilename("ai-cli", "en")).toBe("ai-cli.md");
   });
 
-  it("returns base-lang.md for non-English", () => {
-    expect(resolveFilename("ai-cli", "zh")).toBe("ai-cli-zh.md");
-    expect(resolveFilename("ai-agents", "fr")).toBe("ai-agents-fr.md");
-    expect(resolveFilename("ai-trending", "ja")).toBe("ai-trending-ja.md");
+  it("returns base.lang.md for non-English", () => {
+    expect(resolveFilename("ai-cli", "zh")).toBe("ai-cli.zh.md");
+    expect(resolveFilename("ai-agents", "fr")).toBe("ai-agents.fr.md");
+    expect(resolveFilename("ai-trending", "ja")).toBe("ai-trending.ja.md");
   });
 });
 
