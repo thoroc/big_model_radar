@@ -3,7 +3,7 @@
  * Reads GITHUB_TOKEN and DIGEST_REPO from environment at call time.
  */
 
-import { t } from "./strings.ts";
+import { t, SUPPORTED_LOCALES } from "./strings.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -206,7 +206,10 @@ export async function createGitHubIssue(
     weekly: "7c3aed",
     monthly: "0d9488",
   };
-  await ensureLabel(label, LABEL_COLORS[label] ?? "0075ca");
+  const cleanLabel = (SUPPORTED_LOCALES as readonly string[]).includes(label.split("-").pop() ?? "")
+    ? label.slice(0, label.lastIndexOf("-"))
+    : label;
+  await ensureLabel(label, LABEL_COLORS[label] ?? LABEL_COLORS[cleanLabel] ?? "0075ca");
   const resp = await fetch(`https://api.github.com/repos/${digestRepo}/issues`, {
     method: "POST",
     headers: { ...headers(), "Content-Type": "application/json" },

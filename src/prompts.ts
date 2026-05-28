@@ -8,7 +8,7 @@ import type { TrendingData } from "./trending.ts";
 import type { HnData } from "./hn.ts";
 import { t } from "./strings.ts";
 
-const LANGUAGE_NAMES: Record<string, string> = {
+export const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   zh: "Chinese",
   ja: "Japanese",

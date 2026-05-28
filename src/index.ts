@@ -23,6 +23,7 @@ import {
 } from "./github.ts";
 import {
   type RepoDigest,
+  LANGUAGE_NAMES,
   buildCliPrompt,
   buildPeerPrompt,
   buildComparisonPrompt,
@@ -36,8 +37,8 @@ import { callLlm, saveFile, autoGenFooter, getLlmBaseUrl, hasLlmCredentials } fr
 import { loadWebState, saveWebState, fetchSiteContent, type WebFetchResult, type WebState } from "./web.ts";
 import { fetchTrendingData, type TrendingData } from "./trending.ts";
 import { fetchHnData, type HnData } from "./hn.ts";
-import { loadConfig } from "./config.ts";
-import { t } from "./strings.ts";
+import { loadConfig, getEnabledLangs } from "./config.ts";
+import { t, validateLocale } from "./strings.ts";
 
 // ---------------------------------------------------------------------------
 // Repo config — loaded from config.yml, falls back to built-in defaults
@@ -147,6 +148,7 @@ async function generateSummaries(
   fetchedPeers: RepoFetch[],
   trendingData: TrendingData,
   dateStr: string,
+  lang = "en",
 ): Promise<{
   cliDigests: RepoDigest[];
   openclawSummary: string;
@@ -154,7 +156,7 @@ async function generateSummaries(
   peerDigests: RepoDigest[];
   trendingSummary: string;
 }> {
-  const s = t("en");
+  const s = t(lang);
   const noActivity = s.noActivity;
   const summaryFailed = s.summaryFailed;
   const skillsFailed = s.skillsFailed;
@@ -171,7 +173,7 @@ async function generateSummaries(
         }
         console.log(`  [${cfg.id}] Calling LLM for summary...`);
         try {
-          const summary = await callLlm(buildCliPrompt(cfg, issues, prs, releases, dateStr));
+          const summary = await callLlm(buildCliPrompt(cfg, issues, prs, releases, dateStr, lang));
           return { config: cfg, issues, prs, releases, summary };
         } catch (err) {
           console.error(`  [${cfg.id}] LLM call failed: ${err}`);
@@ -188,7 +190,7 @@ async function generateSummaries(
       }
       console.log(`  [openclaw] Calling LLM for OpenClaw report...`);
       try {
-        return await callLlm(buildPeerPrompt(cfg, issues, prs, releases, dateStr, "en", 50, 30));
+        return await callLlm(buildPeerPrompt(cfg, issues, prs, releases, dateStr, lang, 50, 30));
       } catch (err) {
         console.error(`  [openclaw] LLM call failed: ${err}`);
         return summaryFailed;
@@ -197,7 +199,7 @@ async function generateSummaries(
     (async () => {
       console.log("  [claude-code-skills] Calling LLM for skills report...");
       try {
-        return await callLlm(buildSkillsPrompt(skillsData.prs, skillsData.issues, dateStr));
+        return await callLlm(buildSkillsPrompt(skillsData.prs, skillsData.issues, dateStr, lang));
       } catch (err) {
         console.error(`  [claude-code-skills] LLM call failed: ${err}`);
         return skillsFailed;
@@ -217,7 +219,7 @@ async function generateSummaries(
             issues,
             prs,
             releases,
-            summary: await callLlm(buildPeerPrompt(cfg, issues, prs, releases, dateStr)),
+            summary: await callLlm(buildPeerPrompt(cfg, issues, prs, releases, dateStr, lang)),
           };
         } catch (err) {
           console.error(`  [${cfg.id}] LLM call failed: ${err}`);
@@ -230,7 +232,7 @@ async function generateSummaries(
       if (!hasData) return trendingNoData;
       console.log("  [trending] Calling LLM for trending report...");
       try {
-        return await callLlm(buildTrendingPrompt(trendingData, dateStr), 6144);
+        return await callLlm(buildTrendingPrompt(trendingData, dateStr, lang), 6144);
       } catch (err) {
         console.error(`  [trending] LLM call failed: ${err}`);
         return trendingFailed;
@@ -371,7 +373,7 @@ async function saveWebReport(
   if (hasNewContent) {
     console.log(`  [web] Calling LLM for web content report...`);
     try {
-      const webSummary = await callLlm(buildWebReportPrompt(webResults, dateStr), 8192);
+      const webSummary = await callLlm(buildWebReportPrompt(webResults, dateStr, lang), 8192);
       const isFirstRun = webResults.some((r) => r.isFirstRun);
       const totalNew = webResults.reduce((sum, r) => sum + r.newItems.length, 0);
 
@@ -393,11 +395,17 @@ async function saveWebReport(
         webSummary +
         footer;
 
-      console.log(`  Saved ${saveFile(webContent, dateStr, "ai-web.md")}`);
+      const suffix = lang === "en" ? "" : `-${lang}`;
+      console.log(`  Saved ${saveFile(webContent, dateStr, `ai-web${suffix}.md`)}`);
 
       if (digestRepo) {
         const webIssueTitle = `${s.issueWebTitle} ${dateStr}${isFirstRun ? " (First Crawl)" : ""}`;
-        const webUrl = await createGitHubIssue(webIssueTitle, webContent, s.issueLabelWeb);
+        const webUrl = await createGitHubIssue(
+          webIssueTitle,
+          webContent,
+          `${s.issueLabelWeb}${suffix}`,
+          lang,
+        );
         console.log(`  Created web issue: ${webUrl}`);
       }
     } catch (err) {
@@ -434,13 +442,15 @@ async function saveTrendingReport(
     trendingSummary +
     footer;
 
-  console.log(`  Saved ${saveFile(trendingContent, dateStr, "ai-trending.md")}`);
+  const suffix = lang === "en" ? "" : `-${lang}`;
+  console.log(`  Saved ${saveFile(trendingContent, dateStr, `ai-trending${suffix}.md`)}`);
 
   if (digestRepo) {
     const trendingUrl = await createGitHubIssue(
       `${s.issueTrendingTitle} ${dateStr}`,
       trendingContent,
-      s.issueLabelTrending,
+      `${s.issueLabelTrending}${suffix}`,
+      lang,
     );
     console.log(`  Created trending issue: ${trendingUrl}`);
   }
@@ -462,7 +472,7 @@ async function saveHnReport(
 
   console.log(`  [hn] Calling LLM for HN report...`);
   try {
-    const hnSummary = await callLlm(buildHnPrompt(hnData, dateStr));
+    const hnSummary = await callLlm(buildHnPrompt(hnData, dateStr, lang));
     const hnContent =
       `# ${s.hnTitle} ${dateStr}\n\n` +
       s.hnMeta.replace("{count}", String(hnData.stories.length)).replace("{utcStr}", utcStr) +
@@ -471,10 +481,16 @@ async function saveHnReport(
       hnSummary +
       footer;
 
-    console.log(`  Saved ${saveFile(hnContent, dateStr, "ai-hn.md")}`);
+    const suffix = lang === "en" ? "" : `-${lang}`;
+    console.log(`  Saved ${saveFile(hnContent, dateStr, `ai-hn${suffix}.md`)}`);
 
     if (digestRepo) {
-      const hnUrl = await createGitHubIssue(`${s.issueHnTitle} ${dateStr}`, hnContent, s.issueLabelHn);
+      const hnUrl = await createGitHubIssue(
+        `${s.issueHnTitle} ${dateStr}`,
+        hnContent,
+        `${s.issueLabelHn}${suffix}`,
+        lang,
+      );
       console.log(`  Created HN issue: ${hnUrl}`);
     }
   } catch (err) {
@@ -500,7 +516,7 @@ async function main(): Promise<void> {
 
   console.log(`[${now.toISOString()}] Starting digest | endpoint: ${getLlmBaseUrl()}`);
 
-  // 1. Fetch all data in parallel
+  // 1. Fetch all data in parallel (language-independent, once)
   const webState = loadWebState();
   const { fetched, skillsData, webResults, trendingData, hnData } = await fetchAllData(since, webState);
 
@@ -509,73 +525,98 @@ async function main(): Promise<void> {
   const fetchedOpenclaw = fetched.find((f) => f.cfg.id === OPENCLAW.id)!;
   const fetchedPeers = fetched.filter((f) => peerIds.has(f.cfg.id));
 
-  // 2. Generate per-repo LLM summaries
-  const summaries = await generateSummaries(
-    fetchedCli,
-    fetchedOpenclaw,
-    skillsData,
-    fetchedPeers,
-    trendingData,
-    dateStr,
-  );
-
-  // 3. Generate cross-repo comparisons
-  const openclawDigest: RepoDigest = {
-    config: OPENCLAW,
-    issues: fetchedOpenclaw.issues,
-    prs: fetchedOpenclaw.prs,
-    releases: fetchedOpenclaw.releases,
-    summary: summaries.openclawSummary,
-  };
-  const [comparison, peersComparison] = await Promise.all([
-    callLlm(buildComparisonPrompt(summaries.cliDigests, dateStr)),
-    callLlm(buildPeersComparisonPrompt(openclawDigest, summaries.peerDigests, dateStr)),
-  ]);
-
   const footer = autoGenFooter();
 
-  // 4. Build + save CLI and OpenClaw reports
-  const digestContent = buildCliReportContent(
-    summaries.cliDigests,
-    summaries.skillsSummary,
-    comparison,
-    utcStr,
-    dateStr,
-    footer,
-  );
-  const openclawContent = buildOpenclawReportContent(
-    fetchedOpenclaw,
-    summaries.peerDigests,
-    summaries.openclawSummary,
-    peersComparison,
-    utcStr,
-    dateStr,
-    footer,
-  );
-  console.log(`  Saved ${saveFile(digestContent, dateStr, "ai-cli.md")}`);
-  console.log(`  Saved ${saveFile(openclawContent, dateStr, "ai-agents.md")}`);
+  // 2. Iterate over enabled languages
+  const enabledLangs = getEnabledLangs();
 
-  if (digestRepo) {
-    const cliUrl = await createGitHubIssue(
-      `${t("en").issueCliTitle} ${dateStr}`,
-      digestContent,
-      t("en").issueLabelDigest,
+  for (const rawLang of enabledLangs) {
+    const lang = validateLocale(rawLang);
+    const langName = LANGUAGE_NAMES[lang] ?? lang;
+    console.log(`\n[${lang}] Generating ${langName} report...`);
+
+    // Generate per-repo LLM summaries for this language
+    const summaries = await generateSummaries(
+      fetchedCli,
+      fetchedOpenclaw,
+      skillsData,
+      fetchedPeers,
+      trendingData,
+      dateStr,
+      lang,
     );
-    console.log(`  Created CLI issue: ${cliUrl}`);
-    const openclawUrl = await createGitHubIssue(
-      `${t("en").issueOpenclawTitle} ${dateStr}`,
-      openclawContent,
-      t("en").issueLabelOpenclaw,
+
+    // Generate cross-repo comparisons for this language
+    const openclawDigest: RepoDigest = {
+      config: OPENCLAW,
+      issues: fetchedOpenclaw.issues,
+      prs: fetchedOpenclaw.prs,
+      releases: fetchedOpenclaw.releases,
+      summary: summaries.openclawSummary,
+    };
+    const [comparison, peersComparison] = await Promise.all([
+      callLlm(buildComparisonPrompt(summaries.cliDigests, dateStr, lang)),
+      callLlm(buildPeersComparisonPrompt(openclawDigest, summaries.peerDigests, dateStr, lang)),
+    ]);
+
+    // Build reports for this language
+    const digestContent = buildCliReportContent(
+      summaries.cliDigests,
+      summaries.skillsSummary,
+      comparison,
+      utcStr,
+      dateStr,
+      footer,
+      lang,
     );
-    console.log(`  Created OpenClaw issue: ${openclawUrl}`);
+    const openclawContent = buildOpenclawReportContent(
+      fetchedOpenclaw,
+      summaries.peerDigests,
+      summaries.openclawSummary,
+      peersComparison,
+      utcStr,
+      dateStr,
+      footer,
+      lang,
+    );
+
+    // Save with locale-suffixed filenames
+    const suffix = lang === "en" ? "" : `-${lang}`;
+    console.log(`  Saved ${saveFile(digestContent, dateStr, `ai-cli${suffix}.md`)}`);
+    console.log(`  Saved ${saveFile(openclawContent, dateStr, `ai-agents${suffix}.md`)}`);
+
+    // Create GitHub issues with locale-appropriate labels
+    if (digestRepo) {
+      const s = t(lang);
+      const cliUrl = await createGitHubIssue(
+        `${s.issueCliTitle} ${dateStr}`,
+        digestContent,
+        `${s.issueLabelDigest}${suffix}`,
+        lang,
+      );
+      console.log(`  Created CLI issue: ${cliUrl}`);
+      const openclawUrl = await createGitHubIssue(
+        `${s.issueOpenclawTitle} ${dateStr}`,
+        openclawContent,
+        `${s.issueLabelOpenclaw}${suffix}`,
+        lang,
+      );
+      console.log(`  Created OpenClaw issue: ${openclawUrl}`);
+    }
+
+    // Save web, trending, and HN reports for this language
+    await saveWebReport(webResults, webState, utcStr, dateStr, digestRepo, footer, lang);
+    await saveTrendingReport(
+      trendingData,
+      summaries.trendingSummary,
+      utcStr,
+      dateStr,
+      digestRepo,
+      footer,
+      lang,
+    );
+    await saveHnReport(hnData, utcStr, dateStr, digestRepo, footer, lang);
   }
-
-  // 5. Web, trending, and HN reports
-  await saveWebReport(webResults, webState, utcStr, dateStr, digestRepo, footer);
-
-  await saveTrendingReport(trendingData, summaries.trendingSummary, utcStr, dateStr, digestRepo, footer);
-
-  await saveHnReport(hnData, utcStr, dateStr, digestRepo, footer);
 
   console.log("Done!");
 }
